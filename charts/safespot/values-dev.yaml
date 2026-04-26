@@ -1,0 +1,23 @@
+apiCore:
+  image:
+    repository: ghcr.io/project-safespot/safespot-api-core
+    tag: PLACEHOLDER
+    pullPolicy: Always
+
+apiPublicRead:
+  image:
+    repository: ghcr.io/project-safespot/safespot-api-public-read
+    tag: PLACEHOLDER
+    pullPolicy: Always
+
+externalIngestion:
+  image:
+    repository: ghcr.io/project-safespot/safespot-external-ingestion
+    tag: PLACEHOLDER
+    pullPolicy: Always
+
+nginx:
+  image:
+    repository: ghcr.io/project-safespot/safespot-nginx
+    tag: PLACEHOLDER
+    pullPolicy: Always

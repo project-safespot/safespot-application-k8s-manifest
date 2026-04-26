@@ -1,0 +1,31 @@
+{{- if .Values.nginx.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.nginx.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.nginx.name }}
+    service: {{ .Values.nginx.name }}
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.nginx.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.nginx.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.nginx.name }}
+        service: {{ .Values.nginx.name }}
+        env: {{ .Values.global.env }}
+    spec:
+      containers:
+        - name: {{ .Values.nginx.name }}
+          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.nginx.port }}
+          resources:
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
+{{- end }}

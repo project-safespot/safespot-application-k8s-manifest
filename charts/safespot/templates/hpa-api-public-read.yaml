@@ -1,0 +1,25 @@
+{{- if and .Values.autoscaling.apiPublicRead.enabled .Values.apiPublicRead.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.apiPublicRead.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiPublicRead.name }}
+    service: {{ .Values.apiPublicRead.name }}
+    env: {{ .Values.global.env }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.apiPublicRead.name }}
+  minReplicas: {{ .Values.autoscaling.apiPublicRead.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.apiPublicRead.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.apiPublicRead.targetCPUUtilizationPercentage }}
+{{- end }}

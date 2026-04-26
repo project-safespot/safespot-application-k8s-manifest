@@ -1,0 +1,48 @@
+{{- if .Values.apiPublicRead.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.apiPublicRead.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiPublicRead.name }}
+    service: {{ .Values.apiPublicRead.name }}
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.apiPublicRead.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.apiPublicRead.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.apiPublicRead.name }}
+        service: {{ .Values.apiPublicRead.name }}
+        env: {{ .Values.global.env }}
+    spec:
+      containers:
+        - name: {{ .Values.apiPublicRead.name }}
+          image: "{{ .Values.apiPublicRead.image.repository }}:{{ .Values.apiPublicRead.image.tag }}"
+          imagePullPolicy: {{ .Values.apiPublicRead.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.apiPublicRead.port }}
+          envFrom:
+            - configMapRef:
+                name: safespot-config
+            - secretRef:
+                name: safespot-secret
+          resources:
+            {{- toYaml .Values.apiPublicRead.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+{{- end }}

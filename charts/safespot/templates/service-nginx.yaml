@@ -1,0 +1,19 @@
+{{- if .Values.nginx.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.nginx.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.nginx.name }}
+    service: {{ .Values.nginx.name }}
+    env: {{ .Values.global.env }}
+spec:
+  selector:
+    app: {{ .Values.nginx.name }}
+    service: {{ .Values.nginx.name }}
+  ports:
+    - port: {{ .Values.nginx.port }}
+      targetPort: {{ .Values.nginx.port }}
+  type: ClusterIP
+{{- end }}

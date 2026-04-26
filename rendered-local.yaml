@@ -1,0 +1,428 @@
+---
+# Source: safespot/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: application
+  labels:
+    app: safespot
+    service: safespot
+    env: dev
+---
+# Source: safespot/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: safespot-secret
+  namespace: application
+  labels:
+    app: safespot
+    service: safespot
+    env: dev
+type: Opaque
+stringData:
+  DB_USER: "safespot"
+  DB_PASSWORD: "safespot1234"
+  AWS_ACCESS_KEY_ID: "test"
+  AWS_SECRET_ACCESS_KEY: "test"
+  JWT_SECRET: "changeme"
+---
+# Source: safespot/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: safespot-config
+  namespace: application
+  labels:
+    app: safespot
+    service: safespot
+    env: dev
+data:
+  SPRING_PROFILES_ACTIVE: "dev"
+  DB_HOST: "postgres-postgresql.safespot-db.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "safespot"
+  REDIS_HOST: "redis-master.safespot-cache.svc.cluster.local"
+  REDIS_PORT: "6379"
+  AWS_REGION: "ap-northeast-2"
+  AWS_ENDPOINT: "http://localstack.safespot-localstack.svc.cluster.local:4566"
+---
+# Source: safespot/templates/service-api-core.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-core
+  namespace: application
+  labels:
+    app: api-core
+    service: api-core
+    env: dev
+spec:
+  selector:
+    app: api-core
+    service: api-core
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+# Source: safespot/templates/service-api-public-read.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-public-read
+  namespace: application
+  labels:
+    app: api-public-read
+    service: api-public-read
+    env: dev
+spec:
+  selector:
+    app: api-public-read
+    service: api-public-read
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+# Source: safespot/templates/service-external-ingestion.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-ingestion
+  namespace: application
+  labels:
+    app: external-ingestion
+    service: external-ingestion
+    env: dev
+spec:
+  selector:
+    app: external-ingestion
+    service: external-ingestion
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+# Source: safespot/templates/service-nginx.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: application
+  labels:
+    app: nginx
+    service: nginx
+    env: dev
+spec:
+  selector:
+    app: nginx
+    service: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+# Source: safespot/templates/deployment-api-core.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-core
+  namespace: application
+  labels:
+    app: api-core
+    service: api-core
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-core
+  template:
+    metadata:
+      labels:
+        app: api-core
+        service: api-core
+        env: dev
+    spec:
+      containers:
+        - name: api-core
+          image: "safespot/api-core:local"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: safespot-config
+            - secretRef:
+                name: safespot-secret
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+# Source: safespot/templates/deployment-api-public-read.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-public-read
+  namespace: application
+  labels:
+    app: api-public-read
+    service: api-public-read
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-public-read
+  template:
+    metadata:
+      labels:
+        app: api-public-read
+        service: api-public-read
+        env: dev
+    spec:
+      containers:
+        - name: api-public-read
+          image: "safespot/api-public-read:local"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: safespot-config
+            - secretRef:
+                name: safespot-secret
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+# Source: safespot/templates/deployment-external-ingestion.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-ingestion
+  namespace: application
+  labels:
+    app: external-ingestion
+    service: external-ingestion
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-ingestion
+  template:
+    metadata:
+      labels:
+        app: external-ingestion
+        service: external-ingestion
+        env: dev
+    spec:
+      containers:
+        - name: external-ingestion
+          image: "safespot/external-ingestion:local"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: safespot-config
+            - secretRef:
+                name: safespot-secret
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+# Source: safespot/templates/deployment-nginx.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: application
+  labels:
+    app: nginx
+    service: nginx
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        service: nginx
+        env: dev
+    spec:
+      containers:
+        - name: nginx
+          image: "safespot/nginx:local"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+---
+# Source: safespot/templates/hpa-api-core.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-core
+  namespace: application
+  labels:
+    app: api-core
+    service: api-core
+    env: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-core
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Source: safespot/templates/hpa-api-public-read.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-public-read
+  namespace: application
+  labels:
+    app: api-public-read
+    service: api-public-read
+    env: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-public-read
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Source: safespot/templates/hpa-external-ingestion.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: external-ingestion
+  namespace: application
+  labels:
+    app: external-ingestion
+    service: external-ingestion
+    env: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: external-ingestion
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Source: safespot/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: safespot-ingress
+  namespace: application
+  labels:
+    app: ingress
+    service: ingress
+    env: dev
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: safespot.local
+      http:
+        paths:
+          - path: /api/core
+            pathType: Prefix
+            backend:
+              service:
+                name: api-core
+                port:
+                  number: 8080
+          - path: /api/public
+            pathType: Prefix
+            backend:
+              service:
+                name: api-public-read
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80

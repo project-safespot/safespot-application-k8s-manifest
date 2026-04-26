@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: safespot-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: safespot
+    service: safespot
+    env: {{ .Values.global.env }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.configmap.springProfilesActive | quote }}
+  DB_HOST: {{ .Values.configmap.dbHost | quote }}
+  DB_PORT: {{ .Values.configmap.dbPort | quote }}
+  DB_NAME: {{ .Values.configmap.dbName | quote }}
+  REDIS_HOST: {{ .Values.configmap.redisHost | quote }}
+  REDIS_PORT: {{ .Values.configmap.redisPort | quote }}
+  AWS_REGION: {{ .Values.configmap.awsRegion | quote }}
+  AWS_ENDPOINT: {{ .Values.configmap.awsEndpoint | quote }}

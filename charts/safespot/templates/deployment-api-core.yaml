@@ -1,0 +1,48 @@
+{{- if .Values.apiCore.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.apiCore.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiCore.name }}
+    service: {{ .Values.apiCore.name }}
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.apiCore.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.apiCore.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.apiCore.name }}
+        service: {{ .Values.apiCore.name }}
+        env: {{ .Values.global.env }}
+    spec:
+      containers:
+        - name: {{ .Values.apiCore.name }}
+          image: "{{ .Values.apiCore.image.repository }}:{{ .Values.apiCore.image.tag }}"
+          imagePullPolicy: {{ .Values.apiCore.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.apiCore.port }}
+          envFrom:
+            - configMapRef:
+                name: safespot-config
+            - secretRef:
+                name: safespot-secret
+          resources:
+            {{- toYaml .Values.apiCore.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+{{- end }}

@@ -42,7 +42,7 @@ externalIngestion:
     tag: latest
     pullPolicy: Always
   replicas: 1
-  port: 8080
+  port: 8082
   resources:
     requests:
       cpu: "100m"

@@ -68,13 +68,22 @@ nginx:
 
 configmap:
   springProfilesActive: dev
+
   dbHost: postgres-postgresql.safespot-db.svc.cluster.local
   dbPort: "5432"
   dbName: safespot
+
   redisHost: redis-master.safespot-cache.svc.cluster.local
   redisPort: "6379"
+
   awsRegion: ap-northeast-2
   awsEndpoint: http://localstack.safespot-localstack.svc.cluster.local:4566
+
+  springDatasourceUrl: jdbc:postgresql://postgres-postgresql.safespot-db.svc.cluster.local:5432/safespot
+  springDataRedisHost: redis-master.safespot-cache.svc.cluster.local
+  springDataRedisPort: "6379"
+
+  safespotSqsQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-core-events
 
 secret:
   create: false

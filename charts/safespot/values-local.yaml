@@ -1,3 +1,7 @@
+secret:
+  create: false
+  existingName: safespot-secret
+
 apiCore:
   image:
     tag: local

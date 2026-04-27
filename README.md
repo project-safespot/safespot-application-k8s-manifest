@@ -295,7 +295,63 @@ helm upgrade --install safespot charts/safespot \
 
 ---
 
-## 14. 주의사항
+## 14. Secret 관리
+
+### 원칙
+
+Helm/Argo CD는 기본적으로 `safespot-secret`을 생성하지 않는다 (`secret.create: false`).
+
+실제 Secret은 클러스터 운영자가 직접 클러스터에 생성해야 한다. Git 저장소에 실제 시크릿 값을 커밋하지 않는다.
+
+### 필수 키 목록
+
+| 키 | 설명 |
+|---|---|
+| `DB_USER` | 데이터베이스 사용자 |
+| `DB_PASSWORD` | 데이터베이스 비밀번호 |
+| `SPRING_DATASOURCE_USERNAME` | Spring DataSource 사용자 |
+| `SPRING_DATASOURCE_PASSWORD` | Spring DataSource 비밀번호 |
+| `AWS_ACCESS_KEY_ID` | AWS / LocalStack 액세스 키 |
+| `AWS_SECRET_ACCESS_KEY` | AWS / LocalStack 시크릿 키 |
+| `JWT_SECRET` | JWT 서명 키 |
+| `SAFESPOT_JWT_SECRET` | api-core 필수. `safespot.jwt.secret` 프로퍼티에 매핑됨 |
+| `SAFESPOT_JWT_EXPIRATION` | JWT 만료 시간(초). 기본값 `1800` |
+
+`JWT_SECRET`과 `SAFESPOT_JWT_SECRET`은 동일한 값을 사용한다.
+
+### Secret 생성 방법
+
+환경 파일(`safespot-secret.local.env`)에 키=값 형태로 작성한 후 아래 명령어로 적용한다:
+
+```bash
+kubectl create secret generic safespot-secret \
+  -n application \
+  --from-env-file=safespot-secret.local.env \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+시크릿 값 생성 예시:
+
+```bash
+openssl rand -base64 64
+```
+
+### Helm에서 Secret 직접 생성하는 경우 (로컬 테스트 전용)
+
+`values-local.yaml`에서 `secret.create: true`로 설정하면 Helm이 Secret을 렌더링한다. 단, 이 모드는 실제 값을 Git에 커밋하지 않는 로컬 전용으로만 사용한다.
+
+```yaml
+secret:
+  create: true
+  existingName: safespot-secret
+  dbUser: "myuser"
+  dbPassword: "mypassword"
+  ...
+```
+
+---
+
+## 15. 주의사항
 
 * 이 저장소에서 인프라 리소스를 생성하지 않는다.
 * 환경별 설정은 반드시 values 파일로 관리한다.

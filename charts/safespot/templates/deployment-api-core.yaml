@@ -30,7 +30,7 @@ spec:
             - configMapRef:
                 name: safespot-config
             - secretRef:
-                name: safespot-secret
+                name: {{ .Values.secret.existingName }}
           resources:
             {{- toYaml .Values.apiCore.resources | nindent 12 }}
           readinessProbe:

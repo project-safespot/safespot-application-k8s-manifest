@@ -77,11 +77,14 @@ configmap:
   awsEndpoint: http://localstack.safespot-localstack.svc.cluster.local:4566
 
 secret:
-  dbUser: safespot
-  dbPassword: safespot1234
-  awsAccessKeyId: test
-  awsSecretAccessKey: test
-  jwtSecret: changeme
+  create: false
+  existingName: safespot-secret
+  dbUser: ""
+  dbPassword: ""
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  jwtSecret: ""
+  jwtExpiration: "1800"
 
 ingress:
   enabled: true

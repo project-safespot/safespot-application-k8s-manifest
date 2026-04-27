@@ -1,3 +1,7 @@
+secret:
+  create: false
+  existingName: safespot-secret
+
 apiCore:
   image:
     repository: ghcr.io/project-safespot/safespot-api-core

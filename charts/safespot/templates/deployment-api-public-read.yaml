@@ -28,7 +28,7 @@ spec:
             - containerPort: {{ .Values.apiPublicRead.port }}
           envFrom:
             - configMapRef:
-                name: safespot-config
+                name: safespot-api-public-read-config
             - secretRef:
                 name: {{ .Values.secret.existingName }}
           resources:

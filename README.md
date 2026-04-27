@@ -68,14 +68,15 @@ metadata:
 
 ### PostgreSQL
 
-```
-postgres-postgresql.safespot-db.svc.cluster.local:5432
-```
+| 역할 | 엔드포인트 |
+|---|---|
+| Primary / Write | `postgres-postgresql-primary.safespot-db.svc.cluster.local:5432` |
+| Read-Only | `postgres-postgresql-read.safespot-db.svc.cluster.local:5432` |
 
 ### Redis
 
 ```
-redis-master.safespot-cache.svc.cluster.local:6379
+redis.safespot-cache.svc.cluster.local:6379
 ```
 
 ### LocalStack
@@ -114,17 +115,28 @@ Ingress (nginx) + MetalLB
 
 ## 8. 환경 설정
 
-### ConfigMap
+### ConfigMap (서비스별 분리)
+
+ConfigMap은 서비스마다 별도로 생성된다. 공통 변수(Spring, Redis, AWS)는 모든 ConfigMap에 포함되며, `SPRING_DATASOURCE_URL`은 서비스별로 다른 DB 엔드포인트를 가리킨다.
+
+공통 변수 예시:
 
 ```env
 SPRING_PROFILES_ACTIVE=dev
-DB_HOST=postgres-postgresql.safespot-db.svc.cluster.local
-DB_PORT=5432
-DB_NAME=safespot
-REDIS_HOST=redis-master.safespot-cache.svc.cluster.local
+REDIS_HOST=redis.safespot-cache.svc.cluster.local
 REDIS_PORT=6379
 AWS_REGION=ap-northeast-2
 AWS_ENDPOINT=http://localstack.safespot-localstack.svc.cluster.local:4566
+```
+
+서비스별 SPRING_DATASOURCE_URL:
+
+```env
+# api-core / external-ingestion (primary)
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-postgresql-primary.safespot-db.svc.cluster.local:5432/safespot
+
+# api-public-read (read-only)
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-postgresql-read.safespot-db.svc.cluster.local:5432/safespot
 ```
 
 ### Secret
@@ -139,7 +151,23 @@ JWT_SECRET=<추후 정의>
 
 ---
 
-## 9. 이미지 규칙
+## 9. 서비스별 DB 라우팅
+
+각 Spring Boot 서비스는 서비스별 ConfigMap을 통해 서로 다른 DB 엔드포인트에 연결된다. DB 사용자/비밀번호는 동일한 `safespot-secret`에서 주입된다.
+
+| 서비스 | ConfigMap | DB 엔드포인트 |
+|---|---|---|
+| api-core | safespot-api-core-config | postgres-postgresql-primary.safespot-db.svc.cluster.local |
+| api-public-read | safespot-api-public-read-config | postgres-postgresql-read.safespot-db.svc.cluster.local |
+| external-ingestion | safespot-external-ingestion-config | postgres-postgresql-primary.safespot-db.svc.cluster.local |
+
+- api-core — 쓰기/읽기 모두 필요하므로 **Primary** 사용
+- api-public-read — 읽기 전용 조회 서비스이므로 **Read-Only** 사용
+- external-ingestion — 정규화된 외부 데이터를 DB에 쓰므로 **Primary** 사용
+
+---
+
+## 10. 이미지 규칙
 
 ### 로컬 개발 (values-local.yaml)
 
@@ -161,7 +189,7 @@ ghcr.io/project-safespot/safespot-nginx:<IMAGE_TAG>
 
 ---
 
-## 10. 배포 정책
+## 11. 배포 정책
 
 ```yaml
 apiCore.enabled=true
@@ -172,7 +200,7 @@ nginx.enabled=true
 
 ---
 
-## 11. Helm Chart 구조
+## 12. Helm Chart 구조
 
 ```
 charts/safespot/
@@ -182,7 +210,9 @@ charts/safespot/
 ├── values-dev.yaml          # CI/CD 오버라이드 (GHCR 이미지, pullPolicy: Always)
 └── templates/
     ├── namespace.yaml
-    ├── configmap.yaml
+    ├── configmap-api-core.yaml
+    ├── configmap-api-public-read.yaml
+    ├── configmap-external-ingestion.yaml
     ├── secret.yaml
     ├── deployment-api-core.yaml
     ├── deployment-api-public-read.yaml
@@ -208,7 +238,7 @@ charts/safespot/
 
 ---
 
-## 12. 배포 명령어
+## 13. 배포 명령어
 
 ### 로컬 검증
 
@@ -236,7 +266,7 @@ helm uninstall safespot --namespace application
 
 ---
 
-## 13. CI/CD and Argo CD Workflow
+## 14. CI/CD and Argo CD Workflow
 
 ### 배포 흐름
 
@@ -295,7 +325,7 @@ helm upgrade --install safespot charts/safespot \
 
 ---
 
-## 14. Secret 관리
+## 15. Secret 관리
 
 ### 원칙
 
@@ -351,7 +381,7 @@ secret:
 
 ---
 
-## 15. 주의사항
+## 16. 주의사항
 
 * 이 저장소에서 인프라 리소스를 생성하지 않는다.
 * 환경별 설정은 반드시 values 파일로 관리한다.

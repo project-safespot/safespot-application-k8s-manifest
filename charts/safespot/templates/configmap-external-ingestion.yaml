@@ -1,0 +1,28 @@
+{{- if .Values.externalIngestion.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: safespot-external-ingestion-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.externalIngestion.name }}
+    service: {{ .Values.externalIngestion.name }}
+    env: {{ .Values.global.env }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.configmap.springProfilesActive | quote }}
+  DB_HOST: {{ .Values.configmap.database.primaryHost | quote }}
+  DB_PORT: {{ .Values.configmap.database.port | quote }}
+  DB_NAME: {{ .Values.configmap.database.name | quote }}
+  REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
+  REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  AWS_REGION: {{ .Values.configmap.aws.region | quote }}
+  AWS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
+  AWS_ENDPOINT_URL: {{ .Values.configmap.aws.endpoint | quote }}
+  SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
+  SPRING_DATASOURCE_URL: {{ .Values.configmap.externalIngestion.datasourceUrl | quote }}
+  SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
+  SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  SQS_DISASTER_QUEUE_URL: {{ .Values.configmap.sqs.disasterQueueUrl | quote }}
+  SQS_ENVIRONMENT_QUEUE_URL: {{ .Values.configmap.sqs.environmentQueueUrl | quote }}
+  SQS_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
+{{- end }}

@@ -28,7 +28,7 @@ spec:
             - containerPort: {{ .Values.apiCore.port }}
           envFrom:
             - configMapRef:
-                name: safespot-config
+                name: safespot-api-core-config
             - secretRef:
                 name: {{ .Values.secret.existingName }}
           resources:

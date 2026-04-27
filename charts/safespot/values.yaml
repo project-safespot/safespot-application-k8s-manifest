@@ -69,21 +69,34 @@ nginx:
 configmap:
   springProfilesActive: dev
 
-  dbHost: postgres-postgresql.safespot-db.svc.cluster.local
-  dbPort: "5432"
-  dbName: safespot
+  redis:
+    host: redis.safespot-cache.svc.cluster.local
+    port: "6379"
 
-  redisHost: redis-master.safespot-cache.svc.cluster.local
-  redisPort: "6379"
+  aws:
+    region: ap-northeast-2
+    endpoint: http://localstack.safespot-localstack.svc.cluster.local:4566
 
-  awsRegion: ap-northeast-2
-  awsEndpoint: http://localstack.safespot-localstack.svc.cluster.local:4566
+  sqs:
+    coreEventQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-core-events
+    cacheRegenerationQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-regeneration
+    disasterQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-disaster-events
+    environmentQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-environment-events
 
-  springDatasourceUrl: jdbc:postgresql://postgres-postgresql.safespot-db.svc.cluster.local:5432/safespot
-  springDataRedisHost: redis-master.safespot-cache.svc.cluster.local
-  springDataRedisPort: "6379"
+  database:
+    name: safespot
+    port: "5432"
+    primaryHost: postgres-postgresql-primary.safespot-db.svc.cluster.local
+    readHost: postgres-postgresql-read.safespot-db.svc.cluster.local
 
-  safespotSqsQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-core-events
+  apiCore:
+    datasourceUrl: jdbc:postgresql://postgres-postgresql-primary.safespot-db.svc.cluster.local:5432/safespot
+
+  apiPublicRead:
+    datasourceUrl: jdbc:postgresql://postgres-postgresql-read.safespot-db.svc.cluster.local:5432/safespot
+
+  externalIngestion:
+    datasourceUrl: jdbc:postgresql://postgres-postgresql-primary.safespot-db.svc.cluster.local:5432/safespot
 
 secret:
   create: false

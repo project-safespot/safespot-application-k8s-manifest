@@ -28,7 +28,7 @@ spec:
             - containerPort: {{ .Values.externalIngestion.port }}
           envFrom:
             - configMapRef:
-                name: safespot-config
+                name: safespot-external-ingestion-config
             - secretRef:
                 name: {{ .Values.secret.existingName }}
           resources:

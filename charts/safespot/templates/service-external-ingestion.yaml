@@ -13,7 +13,9 @@ spec:
     app: {{ .Values.externalIngestion.name }}
     service: {{ .Values.externalIngestion.name }}
   ports:
-    - port: {{ .Values.externalIngestion.port }}
+    - name: http
+      port: {{ .Values.externalIngestion.port }}
       targetPort: {{ .Values.externalIngestion.port }}
+      protocol: TCP
   type: ClusterIP
 {{- end }}

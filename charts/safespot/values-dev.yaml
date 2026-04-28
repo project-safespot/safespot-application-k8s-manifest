@@ -19,5 +19,5 @@ externalIngestion:
 nginx:
   image:
     repository: ghcr.io/project-safespot/safespot-nginx
-    tag: b07c93f
+    tag: e184bb5
     pullPolicy: Always

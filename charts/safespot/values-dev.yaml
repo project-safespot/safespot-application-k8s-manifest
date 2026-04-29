@@ -4,17 +4,17 @@ secret:
 apiCore:
   image:
     repository: ghcr.io/project-safespot/safespot-api-core
-    tag: dadc5cb
+    tag: fb6bfa7
     pullPolicy: Always
 apiPublicRead:
   image:
     repository: ghcr.io/project-safespot/safespot-api-public-read
-    tag: dadc5cb
+    tag: fb6bfa7
     pullPolicy: Always
 externalIngestion:
   image:
     repository: ghcr.io/project-safespot/safespot-external-ingestion
-    tag: dadc5cb
+    tag: fb6bfa7
     pullPolicy: Always
 nginx:
   image:

@@ -12,7 +12,7 @@ spec:
     path: charts/safespot
     helm:
       valueFiles:
-        - values-dev.yaml
+        - values-local.yaml
 
   destination:
     server: https://kubernetes.default.svc

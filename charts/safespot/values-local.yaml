@@ -19,7 +19,7 @@ externalIngestion:
 nginx:
   image:
     repository: ghcr.io/project-safespot/safespot-nginx
-    tag: f67a29a
+    tag: local-f070348
     pullPolicy: Always
 autoscaling:
   apiCore:

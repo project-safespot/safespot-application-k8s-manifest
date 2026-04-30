@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  namespace: {{ .Values.global.namespace }}
+spec:
+  template:
+    spec:
+      containers:
+        - name: flyway
+          image: flyway/flyway:10
+          args:
+            - migrate
+          env:
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://{{ .Values.configmap.database.primaryHost }}:{{ .Values.configmap.database.port }}/{{ .Values.configmap.database.name }}
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.existingName }}
+                  key: DB_USER
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.existingName }}
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: sql
+              mountPath: /flyway/sql
+      restartPolicy: Never
+      volumes:
+        - name: sql
+          configMap:
+            name: db-migration-sql

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-migration-sql
+  namespace: {{ .Values.global.namespace }}
+data:
+  V1__init.sql: |
+{{ .Files.Get "migrations/V1__init.sql" | indent 4 }}

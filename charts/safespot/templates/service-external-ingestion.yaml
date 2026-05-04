@@ -1,0 +1,21 @@
+{{- if .Values.externalIngestion.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.externalIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.externalIngestion.name }}
+    service: {{ .Values.externalIngestion.name }}
+    env: {{ .Values.global.env }}
+spec:
+  selector:
+    app: {{ .Values.externalIngestion.name }}
+    service: {{ .Values.externalIngestion.name }}
+  ports:
+    - name: http
+      port: {{ .Values.externalIngestion.port }}
+      targetPort: {{ .Values.externalIngestion.port }}
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

@@ -1,0 +1,25 @@
+{{- if and .Values.autoscaling.externalIngestion.enabled .Values.externalIngestion.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.externalIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.externalIngestion.name }}
+    service: {{ .Values.externalIngestion.name }}
+    env: {{ .Values.global.env }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.externalIngestion.name }}
+  minReplicas: {{ .Values.autoscaling.externalIngestion.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.externalIngestion.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.externalIngestion.targetCPUUtilizationPercentage }}
+{{- end }}

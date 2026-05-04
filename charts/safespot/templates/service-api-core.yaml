@@ -1,0 +1,21 @@
+{{- if .Values.apiCore.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.apiCore.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiCore.name }}
+    service: {{ .Values.apiCore.name }}
+    env: {{ .Values.global.env }}
+spec:
+  selector:
+    app: {{ .Values.apiCore.name }}
+    service: {{ .Values.apiCore.name }}
+  ports:
+    - name: http
+      port: {{ .Values.apiCore.port }}
+      targetPort: {{ .Values.apiCore.port }}
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

@@ -1,0 +1,25 @@
+{{- if and .Values.autoscaling.apiCore.enabled .Values.apiCore.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.apiCore.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiCore.name }}
+    service: {{ .Values.apiCore.name }}
+    env: {{ .Values.global.env }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.apiCore.name }}
+  minReplicas: {{ .Values.autoscaling.apiCore.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.apiCore.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.apiCore.targetCPUUtilizationPercentage }}
+{{- end }}

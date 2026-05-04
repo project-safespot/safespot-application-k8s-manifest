@@ -1,0 +1,48 @@
+{{- if .Values.externalIngestion.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.externalIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.externalIngestion.name }}
+    service: {{ .Values.externalIngestion.name }}
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.externalIngestion.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.externalIngestion.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.externalIngestion.name }}
+        service: {{ .Values.externalIngestion.name }}
+        env: {{ .Values.global.env }}
+    spec:
+      containers:
+        - name: {{ .Values.externalIngestion.name }}
+          image: "{{ .Values.externalIngestion.image.repository }}:{{ .Values.externalIngestion.image.tag }}"
+          imagePullPolicy: {{ .Values.externalIngestion.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.externalIngestion.port }}
+          envFrom:
+            - configMapRef:
+                name: safespot-external-ingestion-config
+            - secretRef:
+                name: {{ .Values.secret.existingName }}
+          resources:
+            {{- toYaml .Values.externalIngestion.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.externalIngestion.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.externalIngestion.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+{{- end }}

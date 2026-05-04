@@ -1,0 +1,31 @@
+namespace: application
+
+image:
+  repository: PLACEHOLDER_ECR_URI
+  pullPolicy: Always
+  tag: "latest"
+
+services:
+  apiCore:
+    name: api-core
+    port: 8080
+  apiPublicRead:
+    name: api-public-read
+    port: 8080
+  externalIngestion:
+    name: external-ingestion
+    port: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  host: PLACEHOLDER_DOMAIN
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    external-dns.alpha.kubernetes.io/hostname: PLACEHOLDER_DOMAIN
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: PLACEHOLDER_IRSA_ROLE_ARN

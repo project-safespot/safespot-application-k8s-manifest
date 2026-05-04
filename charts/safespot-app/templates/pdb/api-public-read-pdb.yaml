@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-public-read-pdb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: api-public-read
+    env: {{ .Values.env | default "dev" }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-public-read

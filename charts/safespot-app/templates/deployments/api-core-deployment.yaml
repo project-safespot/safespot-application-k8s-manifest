@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-core
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: api-core
+    env: {{ .Values.env | default "dev" }}
+spec:
+  replicas: {{ .Values.services.apiCore.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: api-core
+  template:
+    metadata:
+      labels:
+        app: api-core
+        env: {{ .Values.env | default "dev" }}
+    spec:
+      serviceAccountName: api-core
+      containers:
+        - name: api-core
+          image: "{{ .Values.services.apiCore.image }}:{{ .Values.services.apiCore.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: api-core-config
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: safespot-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: safespot-secret
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: safespot-secret
+                  key: JWT_SECRET
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10

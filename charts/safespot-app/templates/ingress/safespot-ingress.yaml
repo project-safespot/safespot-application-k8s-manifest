@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: safespot-ingress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: ingress
+    env: {{ .Values.env | default "dev" }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: {{ index .Values.ingress.annotations "alb.ingress.kubernetes.io/certificate-arn" }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
+spec:
+  ingressClassName: alb
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /api/core
+            pathType: Prefix
+            backend:
+              service:
+                name: api-core
+                port:
+                  number: 8080
+          - path: /api/public
+            pathType: Prefix
+            backend:
+              service:
+                name: api-public-read
+                port:
+                  number: 8080
+          - path: /ingest
+            pathType: Prefix
+            backend:
+              service:
+                name: external-ingestion
+                port:
+                  number: 8080

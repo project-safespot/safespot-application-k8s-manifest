@@ -1,0 +1,35 @@
+namespace: application
+
+image:
+  pullPolicy: Always
+
+services:
+  apiCore:
+    image: PLACEHOLDER_ECR_URI/api-core
+    tag: "dev"
+  apiPublicRead:
+    image: PLACEHOLDER_ECR_URI/api-public-read
+    tag: "dev"
+  externalIngestion:
+    image: PLACEHOLDER_ECR_URI/external-ingestion
+    tag: "dev"
+
+ingress:
+  host: PLACEHOLDER_DOMAIN
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: PLACEHOLDER_ACM_ARN
+
+serviceAccount:
+  apiCore:
+    annotations:
+      eks.amazonaws.com/role-arn: PLACEHOLDER_IRSA_ROLE_ARN
+  apiPublicRead:
+    annotations:
+      eks.amazonaws.com/role-arn: PLACEHOLDER_IRSA_ROLE_ARN
+  externalIngestion:
+    annotations:
+      eks.amazonaws.com/role-arn: PLACEHOLDER_IRSA_ROLE_ARN
+
+externalSecret:
+  secretStoreName: safespot-secret-store
+  secretName: safespot/dev/app

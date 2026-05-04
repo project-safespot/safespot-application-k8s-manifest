@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-public-read-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: api-public-read
+    env: {{ .Values.env | default "dev" }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.env | default "dev" | quote }}
+  DB_HOST: {{ .Values.config.dbHost | quote }}
+  DB_PORT: {{ .Values.config.dbPort | default "5432" | quote }}
+  DB_NAME: {{ .Values.config.dbName | default "safespot" | quote }}
+  REDIS_HOST: {{ .Values.config.redisHost | quote }}
+  REDIS_PORT: {{ .Values.config.redisPort | default "6379" | quote }}
+  AWS_REGION: {{ .Values.config.awsRegion | default "ap-northeast-2" | quote }}

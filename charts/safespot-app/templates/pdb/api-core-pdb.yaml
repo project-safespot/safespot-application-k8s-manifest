@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-core-pdb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: api-core
+    env: {{ .Values.env | default "dev" }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-core

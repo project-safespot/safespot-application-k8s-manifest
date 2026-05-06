@@ -8,11 +8,11 @@ spec:
 
   source:
     repoURL: https://github.com/project-safespot/safespot-application-k8s-manifest.git
-    targetRevision: main
+    targetRevision: feat/aws-manifest-base
     path: charts/safespot
     helm:
       valueFiles:
-        - values-dev.yaml
+        - values-local.yaml
 
   destination:
     server: https://kubernetes.default.svc

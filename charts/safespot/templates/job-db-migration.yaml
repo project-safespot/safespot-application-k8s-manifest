@@ -3,6 +3,9 @@ kind: Job
 metadata:
   name: db-migration
   namespace: {{ .Values.global.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
 spec:
   template:
     spec:

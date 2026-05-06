@@ -28,6 +28,7 @@ spec:
                 name: api-public-read
                 port:
                   number: 8080
+          {{- if .Values.ingress.front.enabled }}
           - path: {{ .Values.ingress.front.path }}
             pathType: {{ .Values.ingress.front.pathType }}
             backend:
@@ -35,4 +36,5 @@ spec:
                 name: nginx
                 port:
                   number: 80
+          {{- end }}
 {{- end }}

@@ -123,6 +123,7 @@ ingress:
     path: /api/public(/|$)(.*)
     pathType: ImplementationSpecific
   front:
+    enabled: true
     path: /
     pathType: Prefix
 

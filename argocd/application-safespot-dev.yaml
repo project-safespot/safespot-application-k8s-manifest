@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: safespot-dev
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/project-safespot/safespot-application-k8s-manifest.git
+    targetRevision: main  # TODO: dev 배포 안정 브랜치 또는 릴리즈 tag로 변경
+    path: charts/safespot
+    helm:
+      valueFiles:
+        - values-dev.yaml
+
+  destination:
+    server: CHANGE_ME_EKS_API_SERVER_URL  # EKS 클러스터 API server URL (kubectl config view로 확인)
+    namespace: application
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

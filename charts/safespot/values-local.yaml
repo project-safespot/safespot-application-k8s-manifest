@@ -1,5 +1,5 @@
 secret:
-  create: false
+  create: true   # local에서만 raw Secret을 직접 생성; 실제 값은 --set 또는 gitignore된 파일로 주입
   existingName: safespot-secret
 
 ingress:

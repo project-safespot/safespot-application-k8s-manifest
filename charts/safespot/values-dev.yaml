@@ -4,6 +4,15 @@ global:
 secret:
   create: false
   existingName: safespot-secret
+  externalSecret:
+    enabled: true
+    remoteRefs:
+      dbUser: /safespot/dev/db/user
+      dbPassword: /safespot/dev/db/password
+      awsAccessKeyId: /safespot/dev/aws/access-key-id
+      awsSecretAccessKey: /safespot/dev/aws/secret-access-key
+      jwtSecret: /safespot/dev/jwt/secret
+      jwtExpiration: /safespot/dev/jwt/expiration
 
 apiCore:
   image:

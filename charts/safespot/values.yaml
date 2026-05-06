@@ -98,6 +98,18 @@ secret:
   awsSecretAccessKey: ""
   jwtSecret: ""
   jwtExpiration: "1800"
+  externalSecret:
+    enabled: false
+    # TODO: platform addon(safespot-terraform)의 ClusterSecretStore 이름을 확인하고 다르면 수정
+    secretStoreName: aws-parameter-store
+    refreshInterval: 1h
+    remoteRefs:
+      dbUser: ""
+      dbPassword: ""
+      awsAccessKeyId: ""
+      awsSecretAccessKey: ""
+      jwtSecret: ""
+      jwtExpiration: ""
 
 ingress:
   enabled: true

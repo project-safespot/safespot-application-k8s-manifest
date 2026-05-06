@@ -26,4 +26,7 @@ data:
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
   SAFESPOT_SQS_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
   SQS_CORE_EVENT_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
+  {{- if .Values.configmap.apiCore.contextPath }}
+  SERVER_SERVLET_CONTEXT_PATH: {{ .Values.configmap.apiCore.contextPath | quote }}
+  {{- end }}
 {{- end }}

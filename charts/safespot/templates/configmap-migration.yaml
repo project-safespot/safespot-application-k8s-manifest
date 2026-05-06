@@ -3,6 +3,10 @@ kind: ConfigMap
 metadata:
   name: db-migration-sql
   namespace: {{ .Values.global.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-2"
 data:
   V1__init.sql: |
 {{ .Files.Get "migrations/V1__init.sql" | indent 4 }}

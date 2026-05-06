@@ -27,4 +27,7 @@ data:
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
   SAFESPOT_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
   SQS_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
+  {{- if .Values.configmap.apiPublicRead.contextPath }}
+  SERVER_SERVLET_CONTEXT_PATH: {{ .Values.configmap.apiPublicRead.contextPath | quote }}
+  {{- end }}
 {{- end }}

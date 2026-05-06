@@ -89,6 +89,11 @@ configmap:
     writerHost: postgres-postgresql-primary.safespot-db.svc.cluster.local
     readerHost: postgres-postgresql-read.safespot-db.svc.cluster.local
 
+  apiCore:
+    contextPath: ""  # nginx rewrite 환경에서는 비워둠; ALB 환경은 values-dev에서 override
+  apiPublicRead:
+    contextPath: ""  # nginx rewrite 환경에서는 비워둠; ALB 환경은 values-dev에서 override
+
 secret:
   create: false
   existingName: safespot-secret

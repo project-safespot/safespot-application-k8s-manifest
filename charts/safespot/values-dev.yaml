@@ -46,6 +46,12 @@ configmap:
     port: "5432"
     name: safespot
 
+  # ALB는 path rewrite 없이 전달 → Spring Boot context-path로 prefix 흡수
+  apiCore:
+    contextPath: /api/core
+  apiPublicRead:
+    contextPath: /api/public
+
   redis:
     host: CHANGE_ME_ELASTICACHE_ENDPOINT  # ElastiCache Redis 엔드포인트
     port: "6379"

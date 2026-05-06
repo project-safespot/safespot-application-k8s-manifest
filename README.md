@@ -281,30 +281,35 @@ GitHub Actions (safespot-application)
 
 ### Argo CD Application
 
-Argo CD 매니페스트는 `argocd/application-safespot.yaml`에 위치한다.
+ArgoCD Application은 환경별로 분리되어 있다:
 
-```yaml
-source:
-  repoURL: https://github.com/project-safespot/k8s-manifest.git
-  targetRevision: main
-  path: charts/safespot
-  helm:
-    valueFiles:
-      - values-dev.yaml
+| 파일 | 대상 | values 파일 |
+|---|---|---|
+| `argocd/application-safespot-dev.yaml` | **EKS dev (canonical)** | `values-dev.yaml` |
+| `argocd/application-safespot-local.yaml` | 로컬 전용 | `values-local.yaml` |
 
-syncPolicy:
-  automated:
-    prune: true
-    selfHeal: true
-  syncOptions:
-    - CreateNamespace=true
-```
-
-Argo CD 등록 명령어:
+**EKS dev 등록 명령어:**
 
 ```bash
-kubectl apply -f argocd/application-safespot.yaml
+kubectl apply -f argocd/application-safespot-dev.yaml
 ```
+
+> ⚠️ `application-safespot-local.yaml`은 로컬 클러스터 전용이다. EKS에 절대 적용하지 말 것.
+
+**배포 전 필수 확인:**
+
+`values-dev.yaml`은 placeholder 파일이다. 실제 EKS 배포 전에 아래 값을 반드시 교체해야 한다:
+
+| placeholder | 교체 대상 |
+|---|---|
+| `CHANGE_ME_RDS_WRITER_ENDPOINT` | RDS 클러스터 writer 엔드포인트 |
+| `CHANGE_ME_RDS_READER_ENDPOINT` | RDS 클러스터 reader 엔드포인트 |
+| `CHANGE_ME_ELASTICACHE_ENDPOINT` | ElastiCache Redis 엔드포인트 |
+| `CHANGE_ME_ACCOUNT_ID` | AWS 계정 ID (SQS URL용) |
+| `CHANGE_ME_EKS_API_SERVER_URL` | EKS 클러스터 API server URL |
+| `CHANGE_ME_ACM_CERTIFICATE_ARN` | ACM 인증서 ARN (HTTPS 전환 시) |
+
+placeholder 치환은 CI/CD 파이프라인(GitHub Actions) 또는 배포 스크립트에서 수행한다. 실제 값을 Git에 직접 커밋하지 않는다.
 
 ### CI에서 이미지 태그 주입 예시
 
@@ -313,15 +318,14 @@ helm upgrade --install safespot charts/safespot \
   -f charts/safespot/values-dev.yaml \
   --set apiCore.image.tag=<IMAGE_TAG> \
   --set apiPublicRead.image.tag=<IMAGE_TAG> \
-  --set externalIngestion.image.tag=<IMAGE_TAG> \
-  --set nginx.image.tag=<IMAGE_TAG>
+  --set externalIngestion.image.tag=<IMAGE_TAG>
 ```
 
 ### 환경별 values 파일 사용 원칙
 
 * `values-local.yaml` — 개발자 로컬 환경 전용. `docker build`로 생성한 로컬 이미지를 사용한다.
-* `values-dev.yaml` — CI/CD 전용. GitHub Actions가 이미지 태그를 주입하며, Argo CD가 이 파일을 기준으로 동기화한다.
-* Argo CD는 항상 `values-dev.yaml`을 사용한다.
+* `values-dev.yaml` — EKS dev 배포용. placeholder를 실제 AWS 리소스 값으로 치환 후 사용한다. Argo CD는 이 파일을 기준으로 동기화한다.
+* **Argo CD(EKS)는 반드시 `values-dev.yaml`만 사용한다.**
 
 ---
 

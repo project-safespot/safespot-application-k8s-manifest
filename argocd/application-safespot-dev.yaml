@@ -12,10 +12,11 @@ spec:
     path: charts/safespot
     helm:
       valueFiles:
-        - values-dev.generated.yaml
+        - values-dev.infra.generated.yaml
+        - values-dev.images.yaml
 
   destination:
-    server: CHANGE_ME_EKS_API_SERVER_URL  # EKS 클러스터 API server URL (kubectl config view로 확인)
+    server: https://kubernetes.default.svc
     namespace: application
 
   syncPolicy:

@@ -1,0 +1,20 @@
+## Owned by the application image-update CI workflow.
+## Do not add infrastructure endpoints or secrets to this file.
+
+apiCore:
+  image:
+    repository: ghcr.io/project-safespot/safespot-api-core
+    tag: 45ab9d9
+    pullPolicy: Always
+
+apiPublicRead:
+  image:
+    repository: ghcr.io/project-safespot/safespot-api-public-read
+    tag: 45ab9d9
+    pullPolicy: Always
+
+externalIngestion:
+  image:
+    repository: ghcr.io/project-safespot/safespot-external-ingestion
+    tag: 45ab9d9
+    pullPolicy: Always

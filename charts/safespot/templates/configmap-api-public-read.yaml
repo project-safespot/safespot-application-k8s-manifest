@@ -10,19 +10,21 @@ metadata:
     env: {{ .Values.global.env }}
 data:
   SPRING_PROFILES_ACTIVE: {{ .Values.configmap.springProfilesActive | quote }}
-  DB_HOST: {{ .Values.configmap.database.readHost | quote }}
+  DB_HOST: {{ .Values.configmap.database.readerHost | quote }}
   DB_PORT: {{ .Values.configmap.database.port | quote }}
   DB_NAME: {{ .Values.configmap.database.name | quote }}
   REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
   AWS_REGION: {{ .Values.configmap.aws.region | quote }}
+  {{- if .Values.configmap.aws.endpoint }}
   AWS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   AWS_ENDPOINT_URL: {{ .Values.configmap.aws.endpoint | quote }}
   SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
-  SPRING_DATASOURCE_URL: {{ .Values.configmap.apiPublicRead.datasourceUrl | quote }}
+  SAFESPOT_AWS_SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
+  {{- end }}
+  SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.readerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
-  SAFESPOT_AWS_SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   SAFESPOT_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
   SQS_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
 {{- end }}

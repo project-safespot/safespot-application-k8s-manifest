@@ -13,7 +13,7 @@ spec:
             - migrate
           env:
             - name: FLYWAY_URL
-              value: jdbc:postgresql://{{ .Values.configmap.database.primaryHost }}:{{ .Values.configmap.database.port }}/{{ .Values.configmap.database.name }}
+              value: jdbc:postgresql://{{ .Values.configmap.database.writerHost }}:{{ .Values.configmap.database.port }}/{{ .Values.configmap.database.name }}
             - name: FLYWAY_USER
               valueFrom:
                 secretKeyRef:

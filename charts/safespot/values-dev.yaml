@@ -1,6 +1,10 @@
+global:
+  env: dev
+
 secret:
   create: false
   existingName: safespot-secret
+
 apiCore:
   image:
     repository: ghcr.io/project-safespot/safespot-api-core
@@ -21,3 +25,26 @@ nginx:
     repository: ghcr.io/project-safespot/safespot-nginx
     tag: e184bb5
     pullPolicy: Always
+
+configmap:
+  springProfilesActive: dev
+
+  aws:
+    region: ap-northeast-2
+    endpoint: ""  # LocalStack 제거 — 실 AWS 사용
+
+  database:
+    writerHost: CHANGE_ME_RDS_WRITER_ENDPOINT  # RDS 클러스터 writer 엔드포인트
+    readerHost: CHANGE_ME_RDS_READER_ENDPOINT  # RDS 클러스터 reader 엔드포인트
+    port: "5432"
+    name: safespot
+
+  redis:
+    host: CHANGE_ME_ELASTICACHE_ENDPOINT  # ElastiCache Redis 엔드포인트
+    port: "6379"
+
+  sqs:
+    coreEventQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-core-events
+    cacheRegenerationQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-cache-regeneration
+    disasterQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-disaster-events
+    environmentQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-environment-events

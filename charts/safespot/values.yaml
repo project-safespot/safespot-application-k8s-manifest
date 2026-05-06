@@ -109,22 +109,23 @@ secret:
   existingName: safespot-secret
   dbUser: ""
   dbPassword: ""
-  awsAccessKeyId: ""
-  awsSecretAccessKey: ""
-  jwtSecret: ""
-  jwtExpiration: "1800"
+  jwtAccessTokenKey: ""
+  jwtRefreshTokenKey: ""
+  openapiServiceKey: ""
+  weatherApiKey: ""
+  airQualityApiKey: ""
   externalSecret:
     enabled: false
-    # TODO: platform addon(safespot-terraform)의 ClusterSecretStore 이름을 확인하고 다르면 수정
     secretStoreName: ssm-parameter-store
     refreshInterval: 1h
     remoteRefs:
       dbUser: ""
       dbPassword: ""
-      awsAccessKeyId: ""
-      awsSecretAccessKey: ""
-      jwtSecret: ""
-      jwtExpiration: ""
+      jwtAccessTokenKey: ""
+      jwtRefreshTokenKey: ""
+      openapiServiceKey: ""
+      weatherApiKey: ""
+      airQualityApiKey: ""
 
 ingress:
   enabled: true

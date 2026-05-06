@@ -8,12 +8,13 @@ secret:
     enabled: true
     secretStoreName: ssm-parameter-store
     remoteRefs:
-      dbUser: /safespot/dev/db/user
-      dbPassword: /safespot/dev/db/password
-      awsAccessKeyId: /safespot/dev/aws/access-key-id
-      awsSecretAccessKey: /safespot/dev/aws/secret-access-key
-      jwtSecret: /safespot/dev/jwt/secret
-      jwtExpiration: /safespot/dev/jwt/expiration
+      dbUser: /safespot/dev/secret/rds/username
+      dbPassword: /safespot/dev/secret/rds/password
+      jwtAccessTokenKey: /safespot/dev/secret/jwt/access-token-key
+      jwtRefreshTokenKey: /safespot/dev/secret/jwt/refresh-token-key
+      openapiServiceKey: /safespot/dev/secret/openapi/service-key
+      weatherApiKey: /safespot/dev/secret/weather/api-key
+      airQualityApiKey: /safespot/dev/secret/air-quality/api-key
 
 apiCore:
   probes:

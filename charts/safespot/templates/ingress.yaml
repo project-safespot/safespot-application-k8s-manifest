@@ -1,0 +1,38 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: safespot-ingress
+  namespace: {{ .Values.global.namespace }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.apiCore.path }}
+            pathType: {{ .Values.ingress.apiCore.pathType }}
+            backend:
+              service:
+                name: api-core
+                port:
+                  number: 8080
+          - path: {{ .Values.ingress.apiPublicRead.path }}
+            pathType: {{ .Values.ingress.apiPublicRead.pathType }}
+            backend:
+              service:
+                name: api-public-read
+                port:
+                  number: 8080
+          - path: {{ .Values.ingress.front.path }}
+            pathType: {{ .Values.ingress.front.pathType }}
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
+{{- end }}

@@ -18,7 +18,7 @@ secret:
 apiCore:
   image:
     repository: ghcr.io/project-safespot/safespot-api-core
-    tag: 45ab9d9
+    tag: PLACEHOLDER
     pullPolicy: Always
   probes:
     livenessPath: /api/core/actuator/health
@@ -30,7 +30,7 @@ apiCore:
 apiPublicRead:
   image:
     repository: ghcr.io/project-safespot/safespot-api-public-read
-    tag: 45ab9d9
+    tag: PLACEHOLDER
     pullPolicy: Always
   probes:
     livenessPath: /api/public/actuator/health
@@ -38,11 +38,13 @@ apiPublicRead:
   service:
     annotations:
       alb.ingress.kubernetes.io/healthcheck-path: /api/public/actuator/health/readiness
+
 externalIngestion:
   image:
     repository: ghcr.io/project-safespot/safespot-external-ingestion
-    tag: 45ab9d9
+    tag: PLACEHOLDER
     pullPolicy: Always
+
 nginx:
   enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
 
@@ -54,8 +56,8 @@ configmap:
     endpoint: ""  # LocalStack 제거 — 실 AWS 사용
 
   database:
-    writerHost: CHANGE_ME_RDS_WRITER_ENDPOINT  # RDS 클러스터 writer 엔드포인트
-    readerHost: CHANGE_ME_RDS_READER_ENDPOINT  # RDS 클러스터 reader 엔드포인트
+    writerHost: ${RDS_WRITER_ENDPOINT}
+    readerHost: ${RDS_READER_ENDPOINT}
     port: "5432"
     name: safespot
 
@@ -66,25 +68,25 @@ configmap:
     contextPath: /api/public
 
   redis:
-    host: CHANGE_ME_ELASTICACHE_ENDPOINT  # ElastiCache Redis 엔드포인트
+    host: ${REDIS_ENDPOINT}
     port: "6379"
 
   sqs:
-    coreEventQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-core-events
-    cacheRegenerationQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-cache-regeneration
-    disasterQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-disaster-events
-    environmentQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-environment-events
+    coreEventQueueUrl: ${SQS_CORE_EVENTS_URL}
+    cacheRegenerationQueueUrl: ${SQS_CACHE_REGENERATION_URL}
+    disasterQueueUrl: ${SQS_DISASTER_EVENTS_URL}
+    environmentQueueUrl: ${SQS_ENVIRONMENT_EVENTS_URL}
 
 ingress:
   className: alb
-  host: api.safespot.site
+  host: ${API_HOST}
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
     # HTTPS 전환 시 아래 항목 활성화 (ACM 인증서 ARN 발급 후)
     # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    # alb.ingress.kubernetes.io/certificate-arn: CHANGE_ME_ACM_CERTIFICATE_ARN
+    # alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
     # alb.ingress.kubernetes.io/ssl-redirect: "443"
   apiCore:
     path: /api/core

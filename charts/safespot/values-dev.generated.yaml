@@ -1,0 +1,101 @@
+## AUTO-GENERATED — do not edit manually.
+## Source: charts/safespot/values-dev.template.yaml
+## Regenerate: scripts/render-dev-values.sh  (or the render-dev-values GitHub Actions workflow)
+
+global:
+  env: dev
+
+secret:
+  create: false
+  existingName: safespot-secret
+  externalSecret:
+    enabled: true
+    secretStoreName: ssm-parameter-store
+    remoteRefs:
+      dbUser: /safespot/dev/db/user
+      dbPassword: /safespot/dev/db/password
+      awsAccessKeyId: /safespot/dev/aws/access-key-id
+      awsSecretAccessKey: /safespot/dev/aws/secret-access-key
+      jwtSecret: /safespot/dev/jwt/secret
+      jwtExpiration: /safespot/dev/jwt/expiration
+
+apiCore:
+  image:
+    repository: ghcr.io/project-safespot/safespot-api-core
+    tag: PLACEHOLDER
+    pullPolicy: Always
+  probes:
+    livenessPath: /api/core/actuator/health
+    readinessPath: /api/core/actuator/health/readiness
+  service:
+    annotations:
+      alb.ingress.kubernetes.io/healthcheck-path: /api/core/actuator/health/readiness
+
+apiPublicRead:
+  image:
+    repository: ghcr.io/project-safespot/safespot-api-public-read
+    tag: PLACEHOLDER
+    pullPolicy: Always
+  probes:
+    livenessPath: /api/public/actuator/health
+    readinessPath: /api/public/actuator/health/readiness
+  service:
+    annotations:
+      alb.ingress.kubernetes.io/healthcheck-path: /api/public/actuator/health/readiness
+
+externalIngestion:
+  image:
+    repository: ghcr.io/project-safespot/safespot-external-ingestion
+    tag: PLACEHOLDER
+    pullPolicy: Always
+
+nginx:
+  enabled: false
+
+configmap:
+  springProfilesActive: dev
+
+  aws:
+    region: ap-northeast-2
+    endpoint: ""
+
+  database:
+    writerHost: PENDING_RDS_WRITER_ENDPOINT
+    readerHost: PENDING_RDS_READER_ENDPOINT
+    port: "5432"
+    name: safespot
+
+  apiCore:
+    contextPath: /api/core
+  apiPublicRead:
+    contextPath: /api/public
+
+  redis:
+    host: PENDING_ELASTICACHE_ENDPOINT
+    port: "6379"
+
+  sqs:
+    coreEventQueueUrl: PENDING_SQS_CORE_EVENTS_URL
+    cacheRegenerationQueueUrl: PENDING_SQS_CACHE_REGENERATION_URL
+    disasterQueueUrl: PENDING_SQS_DISASTER_EVENTS_URL
+    environmentQueueUrl: PENDING_SQS_ENVIRONMENT_EVENTS_URL
+
+ingress:
+  className: alb
+  host: PENDING_API_HOST
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    # HTTPS 전환 시 아래 항목 활성화 (ACM 인증서 ARN 발급 후)
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: PENDING_ACM_CERTIFICATE_ARN
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
+  apiCore:
+    path: /api/core
+    pathType: Prefix
+  apiPublicRead:
+    path: /api/public
+    pathType: Prefix
+  front:
+    enabled: false

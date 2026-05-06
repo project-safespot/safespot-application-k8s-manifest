@@ -311,6 +311,46 @@ kubectl apply -f argocd/application-safespot-dev.yaml
 
 placeholder 치환은 CI/CD 파이프라인(GitHub Actions) 또는 배포 스크립트에서 수행한다. 실제 값을 Git에 직접 커밋하지 않는다.
 
+### feature branch 테스트 방법
+
+`application-safespot-dev.yaml`의 `targetRevision: main`은 main에 merge된 변경사항만 추적한다.  
+feature branch를 테스트할 때는 ArgoCD Application에서 임시로 변경한다:
+
+```bash
+# 임시 적용 (Git에 커밋하지 않음)
+kubectl patch application safespot-dev -n argocd \
+  --type=merge \
+  -p '{"spec":{"source":{"targetRevision":"feat/aws-gitops-cleanup"}}}'
+```
+
+또는 `application-safespot-dev.yaml`을 로컬에서 직접 수정 후 `kubectl apply`:
+
+```yaml
+targetRevision: feat/aws-gitops-cleanup  # 테스트 후 main으로 되돌릴 것
+```
+
+> PR merge 전에는 main 추적 Application으로 feature branch 변경사항을 테스트할 수 없다.
+
+### 최초 EKS 배포 순서
+
+> ⚠️ ExternalSecret이 생성하는 Secret(safespot-secret)은 ArgoCD Sync 중 생성되므로, 최초 배포 시 아래 순서를 지켜야 한다.
+
+```
+1. platform addon 배포 확인 (External Secrets Operator, ClusterSecretStore: ssm-parameter-store)
+2. SSM Parameter Store에 /safespot/dev/... 경로 파라미터 생성 확인
+3. ArgoCD에 EKS 클러스터 등록 (argocd cluster add)
+4. application-safespot-dev.yaml 적용 (kubectl apply)
+5. ArgoCD Sync 실행
+6. ExternalSecret이 safespot-secret 생성 완료 확인
+   kubectl get externalsecret -n application -w
+7. db-migration Job 수동 실행 또는 두 번째 Sync 실행
+```
+
+> **첫 번째 Sync에서 db-migration Job(PreSync hook)이 실패할 수 있다.**  
+> ExternalSecret은 일반 Sync 리소스(wave -2)이므로 PreSync hook보다 나중에 실행된다.  
+> Secret 미존재 → Job pod 생성 실패 → Sync 실패는 예상된 동작이다.  
+> 두 번째 Sync부터는 Secret이 이미 존재하므로 정상 동작한다.
+
 ### CI에서 이미지 태그 주입 예시
 
 ```bash

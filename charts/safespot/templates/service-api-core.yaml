@@ -4,6 +4,10 @@ kind: Service
 metadata:
   name: {{ .Values.apiCore.name }}
   namespace: {{ .Values.global.namespace }}
+  {{- with .Values.apiCore.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app: {{ .Values.apiCore.name }}
     service: {{ .Values.apiCore.name }}

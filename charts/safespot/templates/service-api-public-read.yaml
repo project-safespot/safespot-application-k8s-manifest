@@ -4,6 +4,10 @@ kind: Service
 metadata:
   name: {{ .Values.apiPublicRead.name }}
   namespace: {{ .Values.global.namespace }}
+  {{- with .Values.apiPublicRead.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app: {{ .Values.apiPublicRead.name }}
     service: {{ .Values.apiPublicRead.name }}

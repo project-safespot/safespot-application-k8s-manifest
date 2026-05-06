@@ -17,6 +17,11 @@ apiCore:
       memory: "256Mi"
     limits:
       memory: "512Mi"
+  probes:
+    livenessPath: /actuator/health
+    readinessPath: /actuator/health/readiness
+  service:
+    annotations: {}
 
 apiPublicRead:
   enabled: true
@@ -33,6 +38,11 @@ apiPublicRead:
       memory: "256Mi"
     limits:
       memory: "512Mi"
+  probes:
+    livenessPath: /actuator/health
+    readinessPath: /actuator/health/readiness
+  service:
+    annotations: {}
 
 externalIngestion:
   enabled: true

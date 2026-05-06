@@ -20,11 +20,24 @@ apiCore:
     repository: ghcr.io/project-safespot/safespot-api-core
     tag: 45ab9d9
     pullPolicy: Always
+  probes:
+    livenessPath: /api/core/actuator/health
+    readinessPath: /api/core/actuator/health/readiness
+  service:
+    annotations:
+      alb.ingress.kubernetes.io/healthcheck-path: /api/core/actuator/health/readiness
+
 apiPublicRead:
   image:
     repository: ghcr.io/project-safespot/safespot-api-public-read
     tag: 45ab9d9
     pullPolicy: Always
+  probes:
+    livenessPath: /api/public/actuator/health
+    readinessPath: /api/public/actuator/health/readiness
+  service:
+    annotations:
+      alb.ingress.kubernetes.io/healthcheck-path: /api/public/actuator/health/readiness
 externalIngestion:
   image:
     repository: ghcr.io/project-safespot/safespot-external-ingestion
@@ -69,7 +82,6 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health/readiness
     # HTTPS 전환 시 아래 항목 활성화 (ACM 인증서 ARN 발급 후)
     # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     # alb.ingress.kubernetes.io/certificate-arn: CHANGE_ME_ACM_CERTIFICATE_ARN

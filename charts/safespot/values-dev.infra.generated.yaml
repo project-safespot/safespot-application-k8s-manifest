@@ -1,7 +1,3 @@
-## AUTO-GENERATED — do not edit manually.
-## Source: charts/safespot/values-dev.infra.template.yaml
-## Regenerate: scripts/render-dev-values.sh  (or the render-dev-values GitHub Actions workflow)
-
 global:
   env: dev
 
@@ -36,46 +32,47 @@ apiPublicRead:
       alb.ingress.kubernetes.io/healthcheck-path: /api/public/actuator/health/readiness
 
 nginx:
-  enabled: false
+  enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
 
 configmap:
   springProfilesActive: dev
 
   aws:
     region: ap-northeast-2
-    endpoint: ""
+    endpoint: ""  # LocalStack 제거 — 실 AWS 사용
 
   database:
-    writerHost: PENDING_RDS_WRITER_ENDPOINT
-    readerHost: PENDING_RDS_READER_ENDPOINT
+    writerHost: safespot-dev-data-aurora-cluster.cluster-cd6mumwgwxw4.ap-northeast-2.rds.amazonaws.com
+    readerHost: safespot-dev-data-aurora-cluster.cluster-ro-cd6mumwgwxw4.ap-northeast-2.rds.amazonaws.com
     port: "5432"
     name: safespot
 
+  # ALB는 path rewrite 없이 전달 → Spring Boot context-path로 prefix 흡수
   apiCore:
     contextPath: /api/core
   apiPublicRead:
     contextPath: /api/public
 
   redis:
-    host: PENDING_ELASTICACHE_ENDPOINT
+    host: safespot-dev-data-redis-main.kq1e8u.ng.0001.apn2.cache.amazonaws.com
     port: "6379"
 
   sqs:
-    coreEventQueueUrl: PENDING_READMODEL_QUEUE_URL
-    cacheRegenerationQueueUrl: PENDING_CACHE_REFRESH_QUEUE_URL
-    disasterQueueUrl: PENDING_DLQ_QUEUE_URL
-    environmentQueueUrl: PENDING_ENV_CACHE_QUEUE_URL
+    coreEventQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-cache-refresh
+    cacheRegenerationQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-cache-refresh
+    disasterQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-readmodel-refresh
+    environmentQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-environment-cache-refresh
 
 ingress:
   className: alb
-  host: PENDING_API_HOST
+  host: api-origin.safespot.site
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    # HTTPS 전환 시 아래 항목 활성화
+    # HTTPS 전환 시 아래 항목 활성화 (ACM 인증서 ARN 발급 후)
     # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    # alb.ingress.kubernetes.io/certificate-arn: PENDING_ACM_CERTIFICATE_ARN
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:154335823230:certificate/057acdfe-e3b0-49ab-9365-e9f84aced800
     # alb.ingress.kubernetes.io/ssl-redirect: "443"
   apiCore:
     path: /api/core
@@ -84,4 +81,4 @@ ingress:
     path: /api/public
     pathType: Prefix
   front:
-    enabled: false
+    enabled: false  # 프론트엔드는 CloudFront — nginx 라우트 불필요

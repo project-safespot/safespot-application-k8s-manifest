@@ -8,8 +8,10 @@ REGION="${AWS_REGION:-ap-northeast-2}"
 TEMPLATE="charts/safespot/values-dev.infra.template.yaml"
 OUTPUT="charts/safespot/values-dev.infra.generated.yaml"
 
-# Explicit allowlist prevents accidental substitution of credentials or other env vars.
-ALLOWED_VARS='$AWS_REGION $API_HOST $RDS_WRITER_ENDPOINT $RDS_READER_ENDPOINT $REDIS_ENDPOINT $READMODEL_QUEUE_URL $CACHE_REFRESH_QUEUE_URL $ENV_CACHE_QUEUE_URL $DLQ_QUEUE_URL $ACM_CERTIFICATE_ARN'
+# Explicit allowlist: only these variables are substituted.
+# AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, DB_PASSWORD, JWT_SECRET
+# and other sensitive env vars are intentionally excluded.
+ALLOWED_VARS='$AWS_REGION $SPRING_PROFILE $API_HOST $API_CORE_CONTEXT_PATH $API_PUBLIC_CONTEXT_PATH $RDS_WRITER_ENDPOINT $RDS_READER_ENDPOINT $DB_NAME $DB_PORT $REDIS_ENDPOINT $REDIS_PORT $READMODEL_QUEUE_URL $CACHE_REFRESH_QUEUE_URL $ENV_CACHE_QUEUE_URL $READMODEL_REFRESH_QUEUE_URL $ACM_CERTIFICATE_ARN'
 
 fetch() {
   aws ssm get-parameter --region "$REGION" --name "$1" --query "Parameter.Value" --output text
@@ -19,32 +21,54 @@ echo "Fetching SSM parameters (region: $REGION)..."
 
 export AWS_REGION="$REGION"
 
-export RDS_WRITER_ENDPOINT
-RDS_WRITER_ENDPOINT=$(fetch /safespot/dev/rds/writer-endpoint)
-
-export RDS_READER_ENDPOINT
-RDS_READER_ENDPOINT=$(fetch /safespot/dev/rds/reader-endpoint)
-
-export REDIS_ENDPOINT
-REDIS_ENDPOINT=$(fetch /safespot/dev/elasticache/endpoint)
-
-export READMODEL_QUEUE_URL
-READMODEL_QUEUE_URL=$(fetch /safespot/dev/sqs/readmodel-queue-url)
-
-export CACHE_REFRESH_QUEUE_URL
-CACHE_REFRESH_QUEUE_URL=$(fetch /safespot/dev/sqs/cache-refresh-queue-url)
-
-export ENV_CACHE_QUEUE_URL
-ENV_CACHE_QUEUE_URL=$(fetch /safespot/dev/sqs/env-cache-queue-url)
-
-export DLQ_QUEUE_URL
-DLQ_QUEUE_URL=$(fetch /safespot/dev/sqs/dlq-url)
-
-export ACM_CERTIFICATE_ARN
-ACM_CERTIFICATE_ARN=$(fetch /safespot/dev/acm/certificate-arn 2>/dev/null || echo "")
+export SPRING_PROFILE
+SPRING_PROFILE=$(fetch /safespot/dev/app/profile)
 
 export API_HOST
-API_HOST=$(fetch /safespot/dev/domain/api-host)
+API_HOST=$(fetch /safespot/dev/front-edge/api-origin-domain-name)
+
+export API_CORE_CONTEXT_PATH
+API_CORE_CONTEXT_PATH=$(fetch /safespot/dev/api/core/context-path)
+
+export API_PUBLIC_CONTEXT_PATH
+API_PUBLIC_CONTEXT_PATH=$(fetch /safespot/dev/api/public/context-path)
+
+export RDS_WRITER_ENDPOINT
+RDS_WRITER_ENDPOINT=$(fetch /safespot/dev/data/aurora-cluster-endpoint)
+
+export RDS_READER_ENDPOINT
+RDS_READER_ENDPOINT=$(fetch /safespot/dev/data/aurora-reader-endpoint)
+
+export DB_NAME
+DB_NAME=$(fetch /safespot/dev/data/aurora-db-name)
+
+export DB_PORT
+DB_PORT=$(fetch /safespot/dev/data/aurora-port)
+
+export REDIS_ENDPOINT
+REDIS_ENDPOINT=$(fetch /safespot/dev/data/redis-primary-endpoint)
+
+export REDIS_PORT
+REDIS_PORT=$(fetch /safespot/dev/data/redis-port)
+
+# async-worker queue URLs — SSM path: /safespot/dev/async-worker/*
+export READMODEL_QUEUE_URL
+READMODEL_QUEUE_URL=$(fetch /safespot/dev/async-worker/event-queue-url)
+
+export CACHE_REFRESH_QUEUE_URL
+CACHE_REFRESH_QUEUE_URL=$(fetch /safespot/dev/async-worker/cache-refresh-queue-url)
+
+export ENV_CACHE_QUEUE_URL
+ENV_CACHE_QUEUE_URL=$(fetch /safespot/dev/async-worker/environment-cache-refresh-queue-url)
+
+# TODO: disasterQueueUrl → readmodel-refresh-queue-url 매핑은 아키텍처 확인 필요.
+# external-ingestion의 SQS_DISASTER_QUEUE_URL이 readmodel-refresh와 동일한 큐를 사용하는지
+# 혹은 event-queue-url을 재사용하는지 확인 후 수정할 것.
+export READMODEL_REFRESH_QUEUE_URL
+READMODEL_REFRESH_QUEUE_URL=$(fetch /safespot/dev/async-worker/readmodel-refresh-queue-url)
+
+export ACM_CERTIFICATE_ARN
+ACM_CERTIFICATE_ARN=$(fetch /safespot/dev/front-edge/alb-certificate-arn 2>/dev/null || echo "")
 
 echo "Rendering $OUTPUT..."
 # shellcheck disable=SC2016

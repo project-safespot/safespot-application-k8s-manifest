@@ -35,7 +35,7 @@ nginx:
   enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
 
 configmap:
-  springProfilesActive: dev
+  springProfilesActive: ${SPRING_PROFILE}
 
   aws:
     region: ${AWS_REGION}
@@ -44,23 +44,23 @@ configmap:
   database:
     writerHost: ${RDS_WRITER_ENDPOINT}
     readerHost: ${RDS_READER_ENDPOINT}
-    port: "5432"
-    name: safespot
+    port: "${DB_PORT}"
+    name: ${DB_NAME}
 
   # ALB는 path rewrite 없이 전달 → Spring Boot context-path로 prefix 흡수
   apiCore:
-    contextPath: /api/core
+    contextPath: ${API_CORE_CONTEXT_PATH}
   apiPublicRead:
-    contextPath: /api/public
+    contextPath: ${API_PUBLIC_CONTEXT_PATH}
 
   redis:
     host: ${REDIS_ENDPOINT}
-    port: "6379"
+    port: "${REDIS_PORT}"
 
   sqs:
     coreEventQueueUrl: ${READMODEL_QUEUE_URL}
     cacheRegenerationQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
-    disasterQueueUrl: ${DLQ_QUEUE_URL}
+    disasterQueueUrl: ${READMODEL_REFRESH_QUEUE_URL}
     environmentQueueUrl: ${ENV_CACHE_QUEUE_URL}
 
 ingress:

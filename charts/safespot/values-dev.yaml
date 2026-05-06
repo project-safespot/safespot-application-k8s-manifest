@@ -6,7 +6,7 @@ secret:
   existingName: safespot-secret
   externalSecret:
     enabled: true
-    secretStoreName: aws-parameter-store
+    secretStoreName: ssm-parameter-store
     remoteRefs:
       dbUser: /safespot/dev/db/user
       dbPassword: /safespot/dev/db/password

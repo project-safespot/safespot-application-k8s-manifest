@@ -4,6 +4,16 @@ global:
 secret:
   create: false
   existingName: safespot-secret
+  externalSecret:
+    enabled: true
+    secretStoreName: ssm-parameter-store
+    remoteRefs:
+      dbUser: /safespot/dev/db/user
+      dbPassword: /safespot/dev/db/password
+      awsAccessKeyId: /safespot/dev/aws/access-key-id
+      awsSecretAccessKey: /safespot/dev/aws/secret-access-key
+      jwtSecret: /safespot/dev/jwt/secret
+      jwtExpiration: /safespot/dev/jwt/expiration
 
 apiCore:
   image:
@@ -48,3 +58,21 @@ configmap:
     cacheRegenerationQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-cache-regeneration
     disasterQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-disaster-events
     environmentQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/CHANGE_ME_ACCOUNT_ID/safespot-environment-events
+
+ingress:
+  className: alb
+  host: CHANGE_ME_DEV_HOST  # ExternalDNS가 관리하는 도메인으로 교체
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health/readiness
+  apiCore:
+    path: /api/core
+    pathType: Prefix
+  apiPublicRead:
+    path: /api/public
+    pathType: Prefix
+  front:
+    path: /
+    pathType: Prefix

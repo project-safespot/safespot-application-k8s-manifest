@@ -104,6 +104,15 @@ ingress:
   className: nginx
   host: safespot.local
   annotations: {}
+  apiCore:
+    path: /api/core(/|$)(.*)
+    pathType: ImplementationSpecific
+  apiPublicRead:
+    path: /api/public(/|$)(.*)
+    pathType: ImplementationSpecific
+  front:
+    path: /
+    pathType: Prefix
 
 autoscaling:
   apiCore:

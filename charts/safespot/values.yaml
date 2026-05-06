@@ -86,17 +86,8 @@ configmap:
   database:
     name: safespot
     port: "5432"
-    primaryHost: postgres-postgresql-primary.safespot-db.svc.cluster.local
-    readHost: postgres-postgresql-read.safespot-db.svc.cluster.local
-
-  apiCore:
-    datasourceUrl: jdbc:postgresql://postgres-postgresql-primary.safespot-db.svc.cluster.local:5432/safespot
-
-  apiPublicRead:
-    datasourceUrl: jdbc:postgresql://postgres-postgresql-read.safespot-db.svc.cluster.local:5432/safespot
-
-  externalIngestion:
-    datasourceUrl: jdbc:postgresql://postgres-postgresql-primary.safespot-db.svc.cluster.local:5432/safespot
+    writerHost: postgres-postgresql-primary.safespot-db.svc.cluster.local
+    readerHost: postgres-postgresql-read.safespot-db.svc.cluster.local
 
 secret:
   create: false

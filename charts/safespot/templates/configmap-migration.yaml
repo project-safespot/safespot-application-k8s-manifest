@@ -10,3 +10,5 @@ metadata:
 data:
   V1__init.sql: |
 {{ .Files.Get "migrations/V1__init.sql" | indent 4 }}
+  V2__insert_external_api_source.sql: |
+{{ .Files.Get "migrations/V2__insert_external_api_source.sql" | indent 4 }}

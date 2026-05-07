@@ -20,6 +20,7 @@ spec:
         service: {{ .Values.externalIngestion.name }}
         env: {{ .Values.global.env }}
     spec:
+      serviceAccountName: {{ .Values.externalIngestion.name }}
       containers:
         - name: {{ .Values.externalIngestion.name }}
           image: "{{ .Values.externalIngestion.image.repository }}:{{ .Values.externalIngestion.image.tag }}"

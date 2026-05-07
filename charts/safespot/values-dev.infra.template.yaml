@@ -17,20 +17,30 @@ secret:
       dataGoKrApiKey: /safespot/dev/secret/data-go-kr/service-key
 
 apiCore:
+  serviceAccount:
+    roleArn: ${API_CORE_IRSA_ROLE_ARN}
   probes:
-    livenessPath: /api/core/actuator/health
+    startupPath: /api/core/actuator/health
+    livenessPath: /api/core/actuator/health/liveness
     readinessPath: /api/core/actuator/health/readiness
   service:
     annotations:
       alb.ingress.kubernetes.io/healthcheck-path: /api/core/actuator/health/readiness
 
 apiPublicRead:
+  serviceAccount:
+    roleArn: ${API_PUBLIC_READ_IRSA_ROLE_ARN}
   probes:
-    livenessPath: /api/public/actuator/health
+    startupPath: /api/public/actuator/health
+    livenessPath: /api/public/actuator/health/liveness
     readinessPath: /api/public/actuator/health/readiness
   service:
     annotations:
       alb.ingress.kubernetes.io/healthcheck-path: /api/public/actuator/health/readiness
+
+externalIngestion:
+  serviceAccount:
+    roleArn: ${EXTERNAL_INGESTION_IRSA_ROLE_ARN}
 
 nginx:
   enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
@@ -61,7 +71,10 @@ configmap:
   sqs:
     coreEventQueueUrl: ${READMODEL_QUEUE_URL}
     cacheRegenerationQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
-    disasterQueueUrl: ${READMODEL_REFRESH_QUEUE_URL}
+    # Disaster cache regeneration uses the general cache_refresh queue.
+    # async-worker does not expose a dedicated disaster_cache_refresh queue.
+    # Do not map disasterQueueUrl to readmodel_refresh_queue_url.
+    disasterQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
     environmentQueueUrl: ${ENV_CACHE_QUEUE_URL}
 
 ingress:

@@ -20,6 +20,7 @@ spec:
         service: {{ .Values.apiCore.name }}
         env: {{ .Values.global.env }}
     spec:
+      serviceAccountName: {{ .Values.apiCore.name }}
       containers:
         - name: {{ .Values.apiCore.name }}
           image: "{{ .Values.apiCore.image.repository }}:{{ .Values.apiCore.image.tag }}"
@@ -33,16 +34,20 @@ spec:
                 name: {{ .Values.secret.existingName }}
           resources:
             {{- toYaml .Values.apiCore.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.apiCore.probes.startupPath }}
+              port: {{ .Values.apiCore.port }}
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.readinessPath }}
               port: {{ .Values.apiCore.port }}
-            initialDelaySeconds: 10
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.livenessPath }}
               port: {{ .Values.apiCore.port }}
-            initialDelaySeconds: 30
             periodSeconds: 10
 {{- end }}

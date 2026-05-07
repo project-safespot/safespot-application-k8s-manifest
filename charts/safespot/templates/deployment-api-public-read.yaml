@@ -20,6 +20,7 @@ spec:
         service: {{ .Values.apiPublicRead.name }}
         env: {{ .Values.global.env }}
     spec:
+      serviceAccountName: {{ .Values.apiPublicRead.name }}
       containers:
         - name: {{ .Values.apiPublicRead.name }}
           image: "{{ .Values.apiPublicRead.image.repository }}:{{ .Values.apiPublicRead.image.tag }}"
@@ -33,16 +34,20 @@ spec:
                 name: {{ .Values.secret.existingName }}
           resources:
             {{- toYaml .Values.apiPublicRead.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.apiPublicRead.probes.startupPath }}
+              port: {{ .Values.apiPublicRead.port }}
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: {{ .Values.apiPublicRead.probes.readinessPath }}
               port: {{ .Values.apiPublicRead.port }}
-            initialDelaySeconds: 10
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: {{ .Values.apiPublicRead.probes.livenessPath }}
               port: {{ .Values.apiPublicRead.port }}
-            initialDelaySeconds: 30
             periodSeconds: 10
 {{- end }}

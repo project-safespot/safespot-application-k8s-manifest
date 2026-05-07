@@ -12,9 +12,9 @@ secret:
       dbPassword: /safespot/dev/secret/rds/password
       jwtAccessTokenKey: /safespot/dev/secret/jwt/access-token-key
       jwtRefreshTokenKey: /safespot/dev/secret/jwt/refresh-token-key
-      openapiServiceKey: /safespot/dev/secret/openapi/service-key
-      weatherApiKey: /safespot/dev/secret/weather/api-key
-      airQualityApiKey: /safespot/dev/secret/air-quality/api-key
+      seoulApiKey: /safespot/dev/secret/seoul/service-key
+      moisApiKey: /safespot/dev/secret/mois/api-key
+      dataGoKrApiKey: /safespot/dev/secret/data-go-kr/service-key
 
 apiCore:
   probes:
@@ -70,11 +70,9 @@ ingress:
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    # HTTPS 전환 시 아래 항목 활성화 (ACM 인증서 ARN 발급 후)
-    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    # alb.ingress.kubernetes.io/certificate-arn: ${ACM_CERTIFICATE_ARN}
-    # alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: ${ALB_CERTIFICATE_ARN}
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
   apiCore:
     path: /api/core
     pathType: Prefix

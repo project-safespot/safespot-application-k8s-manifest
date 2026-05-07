@@ -111,9 +111,9 @@ secret:
   dbPassword: ""
   jwtAccessTokenKey: ""
   jwtRefreshTokenKey: ""
-  openapiServiceKey: ""
-  weatherApiKey: ""
-  airQualityApiKey: ""
+  seoulApiKey: ""
+  moisApiKey: ""
+  dataGoKrApiKey: ""
   externalSecret:
     enabled: false
     secretStoreName: ssm-parameter-store
@@ -123,9 +123,9 @@ secret:
       dbPassword: ""
       jwtAccessTokenKey: ""
       jwtRefreshTokenKey: ""
-      openapiServiceKey: ""
-      weatherApiKey: ""
-      airQualityApiKey: ""
+      seoulApiKey: ""
+      moisApiKey: ""
+      dataGoKrApiKey: ""
 
 ingress:
   enabled: true

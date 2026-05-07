@@ -11,7 +11,7 @@ OUTPUT="charts/safespot/values-dev.infra.generated.yaml"
 # Explicit allowlist: only these variables are substituted.
 # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, DB_PASSWORD, JWT_SECRET
 # and other sensitive env vars are intentionally excluded.
-ALLOWED_VARS='$AWS_REGION $SPRING_PROFILE $API_HOST $API_CORE_CONTEXT_PATH $API_PUBLIC_CONTEXT_PATH $RDS_WRITER_ENDPOINT $RDS_READER_ENDPOINT $DB_NAME $DB_PORT $REDIS_ENDPOINT $REDIS_PORT $READMODEL_QUEUE_URL $CACHE_REFRESH_QUEUE_URL $ENV_CACHE_QUEUE_URL $READMODEL_REFRESH_QUEUE_URL $ACM_CERTIFICATE_ARN'
+ALLOWED_VARS='$AWS_REGION $SPRING_PROFILE $API_HOST $API_CORE_CONTEXT_PATH $API_PUBLIC_CONTEXT_PATH $RDS_WRITER_ENDPOINT $RDS_READER_ENDPOINT $DB_NAME $DB_PORT $REDIS_ENDPOINT $REDIS_PORT $READMODEL_QUEUE_URL $CACHE_REFRESH_QUEUE_URL $ENV_CACHE_QUEUE_URL $READMODEL_REFRESH_QUEUE_URL $ALB_CERTIFICATE_ARN'
 
 fetch() {
   aws ssm get-parameter --region "$REGION" --name "$1" --query "Parameter.Value" --output text
@@ -67,8 +67,8 @@ ENV_CACHE_QUEUE_URL=$(fetch /safespot/dev/async-worker/environment-cache-refresh
 export READMODEL_REFRESH_QUEUE_URL
 READMODEL_REFRESH_QUEUE_URL=$(fetch /safespot/dev/async-worker/readmodel-refresh-queue-url)
 
-export ACM_CERTIFICATE_ARN
-ACM_CERTIFICATE_ARN=$(fetch /safespot/dev/front-edge/alb-certificate-arn 2>/dev/null || echo "")
+export ALB_CERTIFICATE_ARN
+ALB_CERTIFICATE_ARN=$(fetch /safespot/dev/front-edge/alb-certificate-arn)
 
 echo "Rendering $OUTPUT..."
 # shellcheck disable=SC2016

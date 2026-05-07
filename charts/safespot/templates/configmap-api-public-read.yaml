@@ -25,8 +25,8 @@ data:
   SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.readerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  SAFESPOT_CACHE_REGENERATION_PUBLISHER_MODE: "sqs"
   SAFESPOT_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
-  SQS_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
   {{- if .Values.configmap.apiPublicRead.contextPath }}
   SERVER_SERVLET_CONTEXT_PATH: {{ .Values.configmap.apiPublicRead.contextPath | quote }}
   {{- end }}

@@ -24,7 +24,7 @@ data:
   SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.writerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
-  SQS_DISASTER_QUEUE_URL: {{ .Values.configmap.sqs.disasterQueueUrl | quote }}
-  SQS_ENVIRONMENT_QUEUE_URL: {{ .Values.configmap.sqs.environmentQueueUrl | quote }}
-  SQS_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
+  INGESTION_SQS_ENABLED: "true"
+  INGESTION_SQS_DISASTER_CACHE_QUEUE_URL: {{ .Values.configmap.sqs.disasterQueueUrl | quote }}
+  INGESTION_SQS_ENVIRONMENT_CACHE_QUEUE_URL: {{ .Values.configmap.sqs.environmentQueueUrl | quote }}
 {{- end }}

@@ -329,17 +329,27 @@ kubectl apply -f argocd/application-safespot-dev.yaml
 
 `values-dev.infra.generated.yaml`은 `render-dev-values` 워크플로가 자동 생성한다. 배포 전에 아래 SSM String 파라미터가 존재하는지 확인한다:
 
-| SSM 경로 | 설명 |
-|---|---|
-| `/safespot/dev/rds/writer-endpoint` | RDS 클러스터 writer 엔드포인트 |
-| `/safespot/dev/rds/reader-endpoint` | RDS 클러스터 reader 엔드포인트 |
-| `/safespot/dev/elasticache/endpoint` | ElastiCache Redis 엔드포인트 |
-| `/safespot/dev/sqs/readmodel-queue-url` | SQS readmodel 큐 URL |
-| `/safespot/dev/sqs/cache-refresh-queue-url` | SQS cache refresh 큐 URL |
-| `/safespot/dev/sqs/env-cache-queue-url` | SQS env-cache 큐 URL |
-| `/safespot/dev/sqs/dlq-url` | SQS DLQ URL |
-| `/safespot/dev/domain/api-host` | Ingress 호스트 (e.g. `api.safespot.site`) |
-| `/safespot/dev/acm/certificate-arn` | ACM 인증서 ARN (HTTPS 전환 시) |
+| SSM 경로 | render 변수 | 설명 |
+|---|---|---|
+| `/safespot/dev/app/profile` | `SPRING_PROFILE` | Spring 프로파일 |
+| `/safespot/dev/data/aurora-cluster-endpoint` | `RDS_WRITER_ENDPOINT` | Aurora writer 엔드포인트 |
+| `/safespot/dev/data/aurora-reader-endpoint` | `RDS_READER_ENDPOINT` | Aurora reader 엔드포인트 |
+| `/safespot/dev/data/aurora-db-name` | `DB_NAME` | 데이터베이스 이름 |
+| `/safespot/dev/data/aurora-port` | `DB_PORT` | 데이터베이스 포트 |
+| `/safespot/dev/data/redis-primary-endpoint` | `REDIS_ENDPOINT` | Redis 엔드포인트 |
+| `/safespot/dev/data/redis-port` | `REDIS_PORT` | Redis 포트 |
+| `/safespot/dev/async-worker/event-queue-url` | `READMODEL_QUEUE_URL` | SQS core event 큐 |
+| `/safespot/dev/async-worker/cache-refresh-queue-url` | `CACHE_REFRESH_QUEUE_URL` | SQS cache refresh 큐 |
+| `/safespot/dev/async-worker/environment-cache-refresh-queue-url` | `ENV_CACHE_QUEUE_URL` | SQS env-cache 큐 |
+| `/safespot/dev/async-worker/readmodel-refresh-queue-url` | `READMODEL_REFRESH_QUEUE_URL` | SQS readmodel refresh 큐 |
+| `/safespot/dev/api/core/context-path` | `API_CORE_CONTEXT_PATH` | api-core context path |
+| `/safespot/dev/api/public/context-path` | `API_PUBLIC_CONTEXT_PATH` | api-public-read context path |
+| `/safespot/dev/front-edge/api-origin-domain-name` | `API_HOST` | Ingress host (`api-origin.safespot.site`) |
+| `/safespot/dev/front-edge/alb-certificate-arn` | `ALB_CERTIFICATE_ARN` | ALB HTTPS 리스너용 ACM ARN (ap-northeast-2) |
+
+> **ACM 인증서 구분**
+> - **ALB 용 (ap-northeast-2)**: `/safespot/dev/front-edge/alb-certificate-arn` — Ingress annotation에 사용
+> - **CloudFront 용 (us-east-1)**: `/safespot/dev/front-edge/certificate-arn` — Ingress에 사용 금지. CloudFront distribution에만 연결
 
 SSM 파라미터 생성 후 `render-dev-values` 워크플로를 수동으로 실행하면 `values-dev.infra.generated.yaml`이 갱신된다.
 
@@ -423,19 +433,23 @@ Git 저장소에 실제 시크릿 값을 커밋하지 않는다.
 
 ### 필수 키 목록
 
-| 키 | 설명 |
-|---|---|
-| `DB_USER` | 데이터베이스 사용자 |
-| `DB_PASSWORD` | 데이터베이스 비밀번호 |
-| `SPRING_DATASOURCE_USERNAME` | Spring DataSource 사용자 |
-| `SPRING_DATASOURCE_PASSWORD` | Spring DataSource 비밀번호 |
-| `AWS_ACCESS_KEY_ID` | AWS / LocalStack 액세스 키 |
-| `AWS_SECRET_ACCESS_KEY` | AWS / LocalStack 시크릿 키 |
-| `JWT_SECRET` | JWT 서명 키 |
-| `SAFESPOT_JWT_SECRET` | api-core 필수. `safespot.jwt.secret` 프로퍼티에 매핑됨 |
-| `SAFESPOT_JWT_EXPIRATION` | JWT 만료 시간(초). 기본값 `1800` |
+| 키 | SSM canonical path | 설명 |
+|---|---|---|
+| `DB_USER` | `/safespot/dev/secret/rds/username` | 데이터베이스 사용자 |
+| `DB_PASSWORD` | `/safespot/dev/secret/rds/password` | 데이터베이스 비밀번호 |
+| `SPRING_DATASOURCE_USERNAME` | `/safespot/dev/secret/rds/username` | Spring DataSource 사용자 (alias) |
+| `SPRING_DATASOURCE_PASSWORD` | `/safespot/dev/secret/rds/password` | Spring DataSource 비밀번호 (alias) |
+| `SAFESPOT_JWT_SECRET` | `/safespot/dev/secret/jwt/access-token-key` | api-core JWT 서명 키. `safespot.jwt.secret` 매핑 |
+| `JWT_REFRESH_TOKEN_KEY` | `/safespot/dev/secret/jwt/refresh-token-key` | JWT 리프레시 토큰 키 (reserved) |
+| `SEOUL_API_KEY` | `/safespot/dev/secret/seoul/service-key` | 서울 열린데이터광장 API 키 |
+| `MOIS_API_KEY` | `/safespot/dev/secret/mois/api-key` | 행정안전부 API 키 (canonical) |
+| `SAFETY_DATA_ALERT_API_KEY` | `/safespot/dev/secret/mois/api-key` | SafetyDataAlertHandler compat alias |
+| `DATA_GO_KR_API_KEY` | `/safespot/dev/secret/data-go-kr/service-key` | data.go.kr 공통 API 키 (canonical) |
+| `KMA_API_KEY` | `/safespot/dev/secret/data-go-kr/service-key` | KmaWeather/KmaEarthquake compat alias |
+| `AIR_KOREA_API_KEY` | `/safespot/dev/secret/data-go-kr/service-key` | AirKoreaAirQuality compat alias |
+| `FORESTRY_API_KEY` | `/safespot/dev/secret/data-go-kr/service-key` | ForestryLandslide compat alias |
 
-`JWT_SECRET`과 `SAFESPOT_JWT_SECRET`은 동일한 값을 사용한다.
+SSM path는 provider/기관 기준으로 명명한다. backend env 이름은 변경하지 않으며, ExternalSecret이 alias 매핑을 제공한다.
 
 ### Secret 생성 방법
 

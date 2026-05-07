@@ -20,9 +20,9 @@ apiCore:
   serviceAccount:
     roleArn: ""
   probes:
-    startupPath: /actuator/health
-    livenessPath: /actuator/health/liveness
-    readinessPath: /actuator/health/readiness
+    startupPath: /api/core/actuator/health
+    livenessPath: /api/core/actuator/health/liveness
+    readinessPath: /api/core/actuator/health/readiness
   service:
     annotations: {}
 
@@ -44,9 +44,9 @@ apiPublicRead:
   serviceAccount:
     roleArn: ""
   probes:
-    startupPath: /actuator/health
-    livenessPath: /actuator/health/liveness
-    readinessPath: /actuator/health/readiness
+    startupPath: /api/public/actuator/health
+    livenessPath: /api/public/actuator/health/liveness
+    readinessPath: /api/public/actuator/health/readiness
   service:
     annotations: {}
 

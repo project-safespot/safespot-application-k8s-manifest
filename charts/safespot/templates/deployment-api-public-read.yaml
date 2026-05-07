@@ -9,7 +9,9 @@ metadata:
     service: {{ .Values.apiPublicRead.name }}
     env: {{ .Values.global.env }}
 spec:
+  {{- if not .Values.autoscaling.apiPublicRead.enabled }}
   replicas: {{ .Values.apiPublicRead.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Values.apiPublicRead.name }}
@@ -26,7 +28,8 @@ spec:
           image: "{{ .Values.apiPublicRead.image.repository }}:{{ .Values.apiPublicRead.image.tag }}"
           imagePullPolicy: {{ .Values.apiPublicRead.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.apiPublicRead.port }}
+            - name: http
+              containerPort: {{ .Values.apiPublicRead.port }}
           envFrom:
             - configMapRef:
                 name: safespot-api-public-read-config
@@ -37,17 +40,22 @@ spec:
           startupProbe:
             httpGet:
               path: {{ .Values.apiPublicRead.probes.startupPath }}
-              port: {{ .Values.apiPublicRead.port }}
-            failureThreshold: 30
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: {{ .Values.apiPublicRead.probes.readinessPath }}
-              port: {{ .Values.apiPublicRead.port }}
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: {{ .Values.apiPublicRead.probes.livenessPath }}
-              port: {{ .Values.apiPublicRead.port }}
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 10
+            failureThreshold: 3
 {{- end }}

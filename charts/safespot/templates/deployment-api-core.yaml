@@ -9,7 +9,9 @@ metadata:
     service: {{ .Values.apiCore.name }}
     env: {{ .Values.global.env }}
 spec:
+  {{- if not .Values.autoscaling.apiCore.enabled }}
   replicas: {{ .Values.apiCore.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Values.apiCore.name }}
@@ -26,7 +28,8 @@ spec:
           image: "{{ .Values.apiCore.image.repository }}:{{ .Values.apiCore.image.tag }}"
           imagePullPolicy: {{ .Values.apiCore.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.apiCore.port }}
+            - name: http
+              containerPort: {{ .Values.apiCore.port }}
           envFrom:
             - configMapRef:
                 name: safespot-api-core-config
@@ -37,17 +40,22 @@ spec:
           startupProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.startupPath }}
-              port: {{ .Values.apiCore.port }}
-            failureThreshold: 30
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.readinessPath }}
-              port: {{ .Values.apiCore.port }}
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.livenessPath }}
-              port: {{ .Values.apiCore.port }}
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 10
+            failureThreshold: 3
 {{- end }}

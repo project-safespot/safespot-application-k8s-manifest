@@ -66,11 +66,12 @@ configmap:
 
 ingress:
   className: alb
+  groupName: safespot-dev-api
   host: ${API_HOST}
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: ${ALB_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/ssl-redirect: "443"
   apiCore:

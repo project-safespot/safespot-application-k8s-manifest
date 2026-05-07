@@ -483,10 +483,43 @@ secret:
 
 ---
 
-## 16. 주의사항
+## 16. ALB Ingress 배포 후 검증
+
+ArgoCD sync 후 아래 명령으로 정상 여부를 확인한다.
+
+```bash
+# Ingress 리소스 확인 (신규: safespot-api-core-ingress, safespot-api-public-read-ingress)
+kubectl get ingress -n application
+
+# ALB IngressGroup 및 TargetGroupBinding 확인
+kubectl describe ingress safespot-api-core-ingress -n application
+kubectl describe ingress safespot-api-public-read-ingress -n application
+kubectl get targetgroupbinding -n application
+
+# ExternalDNS가 api-origin.safespot.site를 ALB에 연결했는지 확인 (TTL 반영 후)
+nslookup api-origin.safespot.site
+
+# HTTP → HTTPS redirect 확인
+curl -I http://api-origin.safespot.site/api/core/actuator/health
+
+# HTTPS 헬스체크 확인
+curl -I https://api-origin.safespot.site/api/core/actuator/health
+curl -I https://api-origin.safespot.site/api/public/actuator/health
+
+# CloudFront 경유 확인
+curl -I https://safespot.site/api/public/actuator/health
+```
+
+> **ALB 교체 주의**: `group.name: safespot-dev-api`가 없는 기존 `safespot-ingress`는 prune으로 삭제되며 ALB도 새로 생성된다.  
+> 신규 ALB DNS가 ExternalDNS를 통해 Route53에 반영되기까지 DNS TTL(기본 60s) 이내 일시적 접근 불가가 발생할 수 있다.
+
+---
+
+## 17. 주의사항
 
 * 이 저장소에서 인프라 리소스를 생성하지 않는다.
 * 환경별 설정은 반드시 values 파일로 관리한다.
 * 민감 정보는 Secret, 일반 설정은 ConfigMap을 사용한다.
 * `values-dev.infra.generated.yaml`과 `values-dev.images.yaml`은 자동 생성/자동 갱신 파일이다. 직접 수정하지 않는다.
 * 두 파일에 `PENDING_` / `PLACEHOLDER` / `CHANGE_ME` / `${VAR}`가 남아 있으면 `validate-dev-values` CI가 실패하고 Argo CD에 도달하지 못한다.
+* ALB Ingress에는 반드시 ap-northeast-2 ACM 인증서를 사용한다. CloudFront용 us-east-1 인증서는 Ingress에 사용 금지.

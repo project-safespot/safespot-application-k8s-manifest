@@ -18,7 +18,7 @@ spec:
     service: {{ .Values.apiPublicRead.name }}
   ports:
     - name: http
-      port: {{ .Values.apiPublicRead.port }}
+      port: 80
       targetPort: {{ .Values.apiPublicRead.port }}
       protocol: TCP
   type: ClusterIP

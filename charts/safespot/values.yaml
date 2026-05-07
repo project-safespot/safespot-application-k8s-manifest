@@ -130,14 +130,17 @@ secret:
 ingress:
   enabled: true
   className: nginx
+  groupName: safespot-api
   host: safespot.local
   annotations: {}
   apiCore:
     path: /api/core(/|$)(.*)
     pathType: ImplementationSpecific
+    healthcheckPath: /api/core/actuator/health
   apiPublicRead:
     path: /api/public(/|$)(.*)
     pathType: ImplementationSpecific
+    healthcheckPath: /api/public/actuator/health
   front:
     enabled: true
     path: /

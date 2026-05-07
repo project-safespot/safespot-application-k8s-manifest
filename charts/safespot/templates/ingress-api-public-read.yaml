@@ -2,26 +2,25 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: safespot-api-core-ingress
+  name: safespot-api-public-read-ingress
   namespace: {{ .Values.global.namespace }}
   annotations:
     alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.groupName }}
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.apiCore.healthcheckPath }}
-    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.apiPublicRead.healthcheckPath }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
-          - path: {{ .Values.ingress.apiCore.path }}
-            pathType: {{ .Values.ingress.apiCore.pathType }}
+          - path: {{ .Values.ingress.apiPublicRead.path }}
+            pathType: {{ .Values.ingress.apiPublicRead.pathType }}
             backend:
               service:
-                name: {{ .Values.apiCore.name }}
+                name: {{ .Values.apiPublicRead.name }}
                 port:
                   number: 80
 {{- end }}

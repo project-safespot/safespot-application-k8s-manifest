@@ -22,6 +22,7 @@ data:
   SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   SAFESPOT_AWS_SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   {{- end }}
+  SPRING_FLYWAY_ENABLED: "false"
   SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.readerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}

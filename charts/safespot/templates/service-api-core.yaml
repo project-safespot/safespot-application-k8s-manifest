@@ -18,7 +18,7 @@ spec:
     service: {{ .Values.apiCore.name }}
   ports:
     - name: http
-      port: {{ .Values.apiCore.port }}
+      port: 80
       targetPort: {{ .Values.apiCore.port }}
       protocol: TCP
   type: ClusterIP

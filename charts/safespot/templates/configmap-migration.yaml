@@ -12,3 +12,9 @@ data:
 {{ .Files.Get "migrations/V1__init.sql" | indent 4 }}
   V2__insert_external_api_source.sql: |
 {{ .Files.Get "migrations/V2__insert_external_api_source.sql" | indent 4 }}
+  V3__fix_seoul_shelter_earthquake_source_url.sql: |
+{{ .Files.Get "migrations/V3__fix_seoul_shelter_earthquake_source_url.sql" | indent 4 }}
+  V4__insert_shelter_seed_data_FLOOD_type.sql: |
+{{ .Files.Get "migrations/V4__insert_shelter_seed_data_FLOOD_type.sql" | indent 4 }}
+  V5__align_disaster_alert_read_model_contract.sql: |
+{{ .Files.Get "migrations/V5__align_disaster_alert_read_model_contract.sql" | indent 4 }}

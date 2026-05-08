@@ -82,6 +82,7 @@ ingress:
   groupName: safespot-dev-api
   host: ${API_HOST}
   annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: safespot-dev-alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'

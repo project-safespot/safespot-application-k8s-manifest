@@ -172,3 +172,24 @@ autoscaling:
     minReplicas: 1
     maxReplicas: 1
     targetCPUUtilizationPercentage: 70
+
+scheduling:
+  apiCore:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  apiPublicRead:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  externalIngestion:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  dbMigration:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}

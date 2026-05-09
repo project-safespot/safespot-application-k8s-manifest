@@ -96,3 +96,28 @@ ingress:
     pathType: Prefix
   front:
     enabled: false  # 프론트엔드는 CloudFront — nginx 라우트 불필요
+
+scheduling:
+  apiCore:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  apiPublicRead:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  externalIngestion:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  dbMigration:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}

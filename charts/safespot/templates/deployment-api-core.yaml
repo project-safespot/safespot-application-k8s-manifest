@@ -23,6 +23,18 @@ spec:
         env: {{ .Values.global.env }}
     spec:
       serviceAccountName: {{ .Values.apiCore.name }}
+      {{- with .Values.scheduling.apiCore.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.apiCore.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.apiCore.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.apiCore.name }}
           image: "{{ .Values.apiCore.image.repository }}:{{ .Values.apiCore.image.tag }}"

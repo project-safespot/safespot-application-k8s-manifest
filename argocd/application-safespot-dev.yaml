@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/project-safespot/safespot-application-k8s-manifest.git
-    targetRevision: feat/aws-gitops-cleanup  # TODO: dev 배포 안정 브랜치 또는 릴리즈 tag로 변경
+    targetRevision: feat/aws-gitops-cleanup  # dev EKS current stable branch; switch to main after final merge
     path: charts/safespot
     helm:
       valueFiles:
@@ -19,9 +19,18 @@ spec:
     server: https://kubernetes.default.svc
     namespace: application
 
+  ignoreDifferences:
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+      name: api-public-read-surge
+      namespace: application
+      jsonPointers:
+        - /spec/minReplicas
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true

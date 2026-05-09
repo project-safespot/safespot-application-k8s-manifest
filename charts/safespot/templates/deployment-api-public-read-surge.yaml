@@ -1,0 +1,75 @@
+{{- if and .Values.apiPublicRead.enabled .Values.apiPublicReadSurge.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.apiPublicReadSurge.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiPublicReadSurge.name }}
+    service: {{ .Values.apiPublicRead.name }}
+    component: surge
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.apiPublicReadSurge.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.apiPublicReadSurge.name }}
+      service: {{ .Values.apiPublicRead.name }}
+      component: surge
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.apiPublicReadSurge.name }}
+        service: {{ .Values.apiPublicRead.name }}
+        component: surge
+        env: {{ .Values.global.env }}
+    spec:
+      serviceAccountName: {{ .Values.apiPublicRead.name }}
+      {{- with .Values.scheduling.apiPublicReadSurge.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.apiPublicReadSurge.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.apiPublicReadSurge.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.apiPublicReadSurge.name }}
+          image: "{{ .Values.apiPublicRead.image.repository }}:{{ .Values.apiPublicRead.image.tag }}"
+          imagePullPolicy: {{ .Values.apiPublicRead.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.apiPublicRead.port }}
+          envFrom:
+            - configMapRef:
+                name: safespot-api-public-read-config
+            - secretRef:
+                name: {{ .Values.secret.existingName }}
+          resources:
+            {{- toYaml .Values.apiPublicReadSurge.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.apiPublicRead.probes.startupPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.apiPublicRead.probes.readinessPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.apiPublicRead.probes.livenessPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+{{- end }}

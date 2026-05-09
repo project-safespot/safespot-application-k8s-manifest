@@ -14,7 +14,6 @@ metadata:
     env: {{ .Values.global.env }}
 spec:
   selector:
-    app: {{ .Values.apiPublicRead.name }}
     service: {{ .Values.apiPublicRead.name }}
   ports:
     - name: http

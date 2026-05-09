@@ -68,6 +68,17 @@ externalIngestion:
   serviceAccount:
     roleArn: ""
 
+apiPublicReadSurge:
+  enabled: false
+  name: api-public-read-surge
+  replicas: 0
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      memory: "512Mi"
+
 nginx:
   enabled: true
   name: nginx
@@ -173,6 +184,20 @@ autoscaling:
     maxReplicas: 1
     targetCPUUtilizationPercentage: 70
 
+  # api-public-read-surge HPA는 External metric 기반 scale-to-zero 구조를 의도한다.
+  # minReplicas=0은 HPAScaleToZero feature gate가 활성화된 클러스터에서만 사용 가능하다.
+  # 현재 EKS 클러스터에서 HPAScaleToZero가 미지원이므로 minReplicas=1로 운영한다.
+  # 재난 해소 시 pre-scaling controller가 Deployment를 직접 scale-to-0으로 관리한다.
+  # Prometheus Adapter external metric rule 구성은 safespot-ops repo 후속 작업이다.
+  apiPublicReadSurge:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "5"
+
 scheduling:
   apiCore:
     nodeSelector: {}
@@ -190,6 +215,11 @@ scheduling:
     affinity: {}
 
   dbMigration:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  apiPublicReadSurge:
     nodeSelector: {}
     tolerations: []
     affinity: {}

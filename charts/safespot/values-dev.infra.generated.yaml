@@ -42,6 +42,10 @@ externalIngestion:
   serviceAccount:
     roleArn: arn:aws:iam::154335823230:role/safespot-dev-api-service-iam-role-external-ingestion
 
+apiPublicReadSurge:
+  enabled: true
+  replicas: 0
+
 nginx:
   enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
 
@@ -121,3 +125,23 @@ scheduling:
       safespot.io/workload-class: app
     tolerations: []
     affinity: {}
+
+  apiPublicReadSurge:
+    nodeSelector:
+      safespot.io/workload-class: public
+    tolerations:
+      - key: safespot.io/dedicated
+        operator: Equal
+        value: public-surge
+        effect: NoSchedule
+    affinity: {}
+
+autoscaling:
+  apiPublicReadSurge:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "5"

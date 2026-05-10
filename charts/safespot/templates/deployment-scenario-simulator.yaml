@@ -35,6 +35,13 @@ spec:
                 name: {{ .Values.secret.existingName }}
           resources:
             {{- toYaml .Values.scenarioSimulator.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.scenarioSimulator.probes.startupPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 15
           readinessProbe:
             httpGet:
               path: {{ .Values.scenarioSimulator.probes.readinessPath }}

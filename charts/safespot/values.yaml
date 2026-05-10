@@ -96,7 +96,7 @@ preScalingController:
       minLevelRank: "3"
       lookbackMinutes: "10"
     surge:
-      normalMinReplicas: "0"
+      normalMinReplicas: "1"
       disasterMinReplicas: "3"
       maxReplicas: "10"
       cooldownSeconds: "1800"
@@ -129,7 +129,7 @@ scenarioSimulator:
 apiPublicReadSurge:
   enabled: true
   name: api-public-read-surge
-  replicas: 0
+  replicas: 1
   port: 8080
   resources:
     requests:

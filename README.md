@@ -760,7 +760,26 @@ curl -X POST http://localhost:18080/internal/test/scenarios/run \
 | prod 활성화 | 금지 |
 | Ingress / ALB 라우팅 | 없음 (ClusterIP only) |
 | CloudFront 노출 | 없음 |
-| IRSA role | Terraform 미생성 — `roleArn: ""` 임시 유지. 생성 후 SSM 경유 주입 필요 |
+| IRSA 구성 | 아래 ServiceAccount 절 참고 |
+
+### ServiceAccount (IRSA) 구성
+
+**AWS dev 임시 구성**: scenario-simulator는 전용 IRSA role 없이 기존 `api-core` ServiceAccount를 재사용한다.
+
+```yaml
+scenarioSimulator:
+  serviceAccount:
+    create: false
+    name: api-core  # api-core IRSA SA 재사용
+```
+
+**재사용 이유**:
+- scenario-simulator는 api-core와 동일한 SQS core-event 큐에 메시지를 발행한다.
+- Terraform 변경 없이 기존 SQS SendMessage 권한을 즉시 활용할 수 있다.
+
+**추후 분리 권장**: 서비스별 최소 권한 원칙에 따라 scenario-simulator 전용 IRSA role을 생성하고 `serviceAccount.create: true`, `serviceAccount.roleArn`을 설정하는 것이 권장된다.
+
+> prod에서는 `scenarioSimulator.enabled: false` 유지 — ServiceAccount 공유 여부와 무관하게 prod 노출은 금지한다.
 
 ### 이미지 태그 관리
 

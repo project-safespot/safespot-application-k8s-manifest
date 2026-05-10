@@ -96,6 +96,8 @@ scenarioSimulator:
       cpu: "500m"
       memory: "512Mi"
   serviceAccount:
+    create: false
+    name: api-core  # dev: api-core IRSA SA 재사용 (SQS SendMessage 권한 공유)
     roleArn: ""
   probes:
     readinessPath: /actuator/health/readiness

@@ -47,7 +47,8 @@ scenarioSimulator:
   image:
     repository: ghcr.io/project-safespot/safespot-scenario-simulator
   serviceAccount:
-    roleArn: ""  # TODO: Terraform으로 IRSA role 생성 후 주입
+    create: false
+    name: api-core  # dev 임시: api-core IRSA SA 재사용. 추후 전용 role로 분리 권장
 
 apiPublicReadSurge:
   enabled: true

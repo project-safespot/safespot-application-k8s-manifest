@@ -20,7 +20,7 @@ spec:
         service: {{ .Values.scenarioSimulator.name }}
         env: {{ .Values.global.env }}
     spec:
-      serviceAccountName: {{ .Values.scenarioSimulator.name }}
+      serviceAccountName: {{ .Values.scenarioSimulator.serviceAccount.name }}
       containers:
         - name: {{ .Values.scenarioSimulator.name }}
           image: "{{ .Values.scenarioSimulator.image.repository }}:{{ .Values.scenarioSimulator.image.tag }}"

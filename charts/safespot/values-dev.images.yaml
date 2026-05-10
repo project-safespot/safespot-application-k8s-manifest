@@ -3,41 +3,21 @@
 
 apiCore:
   image:
-<<<<<<< HEAD
-    repository: ghcr.io/project-safespot/safespot-api-core
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-api-core
     tag: "490b144"
     pullPolicy: Always
 apiPublicRead:
   image:
-    repository: ghcr.io/project-safespot/safespot-api-public-read
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-api-public-read
     tag: "490b144"
     pullPolicy: Always
 externalIngestion:
   image:
-    repository: ghcr.io/project-safespot/safespot-external-ingestion
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-external-ingestion
     tag: "490b144"
     pullPolicy: Always
 scenarioSimulator:
   image:
-    repository: ghcr.io/project-safespot/safespot-scenario-simulator
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-scenario-simulator
     tag: "490b144"
-=======
-    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-api-core
-    tag: "977ca3e"
-    pullPolicy: Always
-apiPublicRead:
-  image:
-    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-api-public-read
-    tag: "977ca3e"
-    pullPolicy: Always
-externalIngestion:
-  image:
-    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-external-ingestion
-    tag: "977ca3e"
-    pullPolicy: Always
-scenarioSimulator:
-  image:
-    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-scenario-simulator
-    tag: "977ca3e"
->>>>>>> 7640be4 (fix:ghcr->ECR 전환)
     pullPolicy: Always

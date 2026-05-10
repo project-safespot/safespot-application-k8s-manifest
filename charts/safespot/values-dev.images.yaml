@@ -4,15 +4,18 @@
 apiCore:
   image:
     repository: ghcr.io/project-safespot/safespot-api-core
-    tag: eeb3e45
+    tag: 1e08495
     pullPolicy: Always
 apiPublicRead:
   image:
     repository: ghcr.io/project-safespot/safespot-api-public-read
-    tag: eeb3e45
+    tag: 1e08495
     pullPolicy: Always
 externalIngestion:
   image:
     repository: ghcr.io/project-safespot/safespot-external-ingestion
-    tag: eeb3e45
+    tag: 1e08495
     pullPolicy: Always
+scenarioSimulator:
+  image:
+    tag: 1e08495

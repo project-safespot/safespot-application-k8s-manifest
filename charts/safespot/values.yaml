@@ -79,6 +79,28 @@ apiPublicReadSurge:
     limits:
       memory: "512Mi"
 
+scenarioSimulator:
+  enabled: false
+  name: scenario-simulator
+  image:
+    repository: safespot/scenario-simulator
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  serviceAccount:
+    roleArn: ""
+  probes:
+    readinessPath: /actuator/health/readiness
+    livenessPath: /actuator/health/liveness
+
 nginx:
   enabled: true
   name: nginx

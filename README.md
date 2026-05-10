@@ -716,7 +716,67 @@ curl -I https://safespot.site/api/public/actuator/health
 
 ---
 
-## 20. 주의사항
+## 20. scenario-simulator (dev/test 전용)
+
+`scenario-simulator`는 재난 시나리오 부하 테스트 전용 서비스다. 운영 노출 없이 cluster 내부에서만 접근한다.
+
+### 접근 방법
+
+```bash
+kubectl -n application port-forward svc/scenario-simulator 18080:8080
+```
+
+### 호출 예시
+
+```bash
+curl -X POST http://localhost:18080/internal/test/scenarios/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scenarioName": "SEOUL_HIGH_EARTHQUAKE_LOAD",
+    "disaster": {
+      "disasterType": "EARTHQUAKE",
+      "region": "SEOUL",
+      "level": "HIGH"
+    },
+    "residents": {
+      "count": 1000,
+      "distribution": "WEIGHTED_BY_CAPACITY"
+    },
+    "cache": {
+      "triggerRegeneration": true
+    },
+    "scale": {
+      "triggerProactiveScale": true
+    }
+  }'
+```
+
+### 배포 정책
+
+| 항목 | 값 |
+|---|---|
+| `scenarioSimulator.enabled` 기본값 | `false` |
+| dev EKS 활성화 | `values-dev.infra.generated.yaml` (`enabled: true`) |
+| prod 활성화 | 금지 |
+| Ingress / ALB 라우팅 | 없음 (ClusterIP only) |
+| CloudFront 노출 | 없음 |
+| IRSA role | Terraform 미생성 — `roleArn: ""` 임시 유지. 생성 후 SSM 경유 주입 필요 |
+
+### 이미지 태그 관리
+
+`values-dev.images.yaml`의 `scenarioSimulator.image.tag`를 image-update CI가 다른 서비스와 동일하게 관리한다.
+
+```yaml
+scenarioSimulator:
+  image:
+    repository: ghcr.io/project-safespot/safespot-scenario-simulator
+    tag: <IMAGE_TAG>
+    pullPolicy: Always
+```
+
+---
+
+## 21. 주의사항
 
 * 이 저장소에서 인프라 리소스를 생성하지 않는다.
 * 환경별 설정은 반드시 values 파일로 관리한다.

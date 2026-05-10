@@ -42,6 +42,13 @@ externalIngestion:
   serviceAccount:
     roleArn: arn:aws:iam::154335823230:role/safespot-dev-api-service-iam-role-external-ingestion
 
+scenarioSimulator:
+  enabled: true
+  image:
+    repository: ghcr.io/project-safespot/safespot-scenario-simulator
+  serviceAccount:
+    roleArn: ""  # TODO: Terraform으로 IRSA role 생성 후 주입
+
 apiPublicReadSurge:
   enabled: true
   replicas: 0

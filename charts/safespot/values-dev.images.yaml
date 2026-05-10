@@ -18,4 +18,6 @@ externalIngestion:
     pullPolicy: Always
 scenarioSimulator:
   image:
+    repository: ghcr.io/project-safespot/safespot-scenario-simulator
     tag: 1e08495
+    pullPolicy: Always

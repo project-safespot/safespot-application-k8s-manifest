@@ -1,0 +1,30 @@
+{{- if .Values.scenarioSimulator.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: safespot-scenario-simulator-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.scenarioSimulator.name }}
+    service: {{ .Values.scenarioSimulator.name }}
+    env: {{ .Values.global.env }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.configmap.springProfilesActive | quote }}
+  SPRING_FLYWAY_ENABLED: "false"
+  DB_HOST: {{ .Values.configmap.database.writerHost | quote }}
+  DB_PORT: {{ .Values.configmap.database.port | quote }}
+  DB_NAME: {{ .Values.configmap.database.name | quote }}
+  SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.writerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
+  REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
+  REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
+  SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  AWS_REGION: {{ .Values.configmap.aws.region | quote }}
+  {{- if .Values.configmap.aws.endpoint }}
+  AWS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
+  AWS_ENDPOINT_URL: {{ .Values.configmap.aws.endpoint | quote }}
+  SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
+  {{- end }}
+  SAFESPOT_SQS_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
+  SQS_CORE_EVENT_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
+{{- end }}

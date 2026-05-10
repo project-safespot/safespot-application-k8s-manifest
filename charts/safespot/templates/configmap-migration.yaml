@@ -18,3 +18,5 @@ data:
 {{ .Files.Get "migrations/V4__insert_shelter_seed_data_FLOOD_type.sql" | indent 4 }}
   V5__align_disaster_alert_read_model_contract.sql: |
 {{ .Files.Get "migrations/V5__align_disaster_alert_read_model_contract.sql" | indent 4 }}
+  V6__create_test_scenario_record.sql: |
+{{ .Files.Get "migrations/V6__create_test_scenario_record.sql" | indent 4 }}

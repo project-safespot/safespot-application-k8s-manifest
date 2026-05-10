@@ -42,6 +42,13 @@ externalIngestion:
   serviceAccount:
     roleArn: ${EXTERNAL_INGESTION_IRSA_ROLE_ARN}
 
+scenarioSimulator:
+  enabled: true
+  image:
+    repository: ghcr.io/project-safespot/safespot-scenario-simulator
+  serviceAccount:
+    roleArn: ""  # TODO: Terraform으로 IRSA role 생성 후 SSM 파라미터 경유 주입
+
 apiPublicReadSurge:
   enabled: true
   replicas: 0

@@ -71,7 +71,7 @@ externalIngestion:
 apiPublicReadSurge:
   enabled: false
   name: api-public-read-surge
-  replicas: 0
+  replicas: 1
   resources:
     requests:
       cpu: "100m"

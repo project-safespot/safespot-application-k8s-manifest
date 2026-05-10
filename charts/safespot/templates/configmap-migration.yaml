@@ -22,3 +22,5 @@ data:
 {{ .Files.Get "migrations/V6__create_test_scenario_record.sql" | indent 4 }}
   V7__fix_test_scenario_record_schema.sql: |
 {{ .Files.Get "migrations/V7__fix_test_scenario_record_schema.sql" | indent 4 }}
+  V8__fix_external_api_source_contracts.sql: |
+{{ .Files.Get "migrations/V8__fix_external_api_source_contracts.sql" | indent 4 }}

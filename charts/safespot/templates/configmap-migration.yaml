@@ -20,3 +20,5 @@ data:
 {{ .Files.Get "migrations/V5__align_disaster_alert_read_model_contract.sql" | indent 4 }}
   V6__create_test_scenario_record.sql: |
 {{ .Files.Get "migrations/V6__create_test_scenario_record.sql" | indent 4 }}
+  V7__fix_test_scenario_record_schema.sql: |
+{{ .Files.Get "migrations/V7__fix_test_scenario_record_schema.sql" | indent 4 }}

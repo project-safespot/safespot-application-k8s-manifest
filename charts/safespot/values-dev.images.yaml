@@ -21,3 +21,8 @@ scenarioSimulator:
     repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-scenario-simulator
     tag: "7f3f34f-57-1"
     pullPolicy: Always
+preScalingController:
+  image:
+    repository: ghcr.io/project-safespot/safespot-pre-scaling-controller
+    tag: latest
+    pullPolicy: Always

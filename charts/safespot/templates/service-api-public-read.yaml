@@ -14,6 +14,9 @@ metadata:
     env: {{ .Values.global.env }}
 spec:
   selector:
+    # Single label selector so both base (app: api-public-read) and
+    # surge (app: api-public-read-surge) pods are included as endpoints.
+    # Both Deployments carry service: api-public-read on their pods.
     service: {{ .Values.apiPublicRead.name }}
   ports:
     - name: http

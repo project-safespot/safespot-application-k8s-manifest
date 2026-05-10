@@ -68,16 +68,38 @@ externalIngestion:
   serviceAccount:
     roleArn: ""
 
-apiPublicReadSurge:
-  enabled: false
-  name: api-public-read-surge
+preScalingController:
+  enabled: true
+  name: pre-scaling-controller
+  image:
+    repository: safespot/pre-scaling-controller
+    tag: latest
+    pullPolicy: Always
   replicas: 1
+  port: 8084
   resources:
     requests:
       cpu: "100m"
       memory: "256Mi"
     limits:
       memory: "512Mi"
+  serviceAccount:
+    roleArn: ""
+  probes:
+    livenessPath: /actuator/health/liveness
+    readinessPath: /actuator/health/readiness
+  config:
+    enabled: "true"
+    targetHpaName: api-public-read-surge
+    pollingIntervalMs: "30000"
+    trigger:
+      minLevelRank: "3"
+      lookbackMinutes: "10"
+    surge:
+      normalMinReplicas: "0"
+      disasterMinReplicas: "3"
+      maxReplicas: "10"
+      cooldownSeconds: "1800"
 
 scenarioSimulator:
   enabled: false
@@ -97,12 +119,24 @@ scenarioSimulator:
       memory: "512Mi"
   serviceAccount:
     create: false
-    name: api-core  # dev: api-core IRSA SA 재사용 (SQS SendMessage 권한 공유)
+    name: api-core
     roleArn: ""
   probes:
     startupPath: /actuator/health
     readinessPath: /actuator/health/readiness
     livenessPath: /actuator/health/liveness
+
+apiPublicReadSurge:
+  enabled: true
+  name: api-public-read-surge
+  replicas: 0
+  port: 8080
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      memory: "512Mi"
 
 nginx:
   enabled: true
@@ -144,9 +178,9 @@ configmap:
     readerHost: postgres-postgresql-read.safespot-db.svc.cluster.local
 
   apiCore:
-    contextPath: ""  # nginx rewrite 환경에서는 비워둠; ALB 환경은 values-dev에서 override
+    contextPath: ""
   apiPublicRead:
-    contextPath: ""  # nginx rewrite 환경에서는 비워둠; ALB 환경은 values-dev에서 override
+    contextPath: ""
 
 secret:
   create: false
@@ -209,19 +243,11 @@ autoscaling:
     maxReplicas: 1
     targetCPUUtilizationPercentage: 70
 
-  # api-public-read-surge HPA는 External metric 기반 scale-to-zero 구조를 의도한다.
-  # minReplicas=0은 HPAScaleToZero feature gate가 활성화된 클러스터에서만 사용 가능하다.
-  # 현재 EKS 클러스터에서 HPAScaleToZero가 미지원이므로 minReplicas=1로 운영한다.
-  # 재난 해소 시 pre-scaling controller가 Deployment를 직접 scale-to-0으로 관리한다.
-  # Prometheus Adapter external metric rule 구성은 safespot-ops repo 후속 작업이다.
   apiPublicReadSurge:
     enabled: true
     minReplicas: 1
     maxReplicas: 10
-    metric:
-      type: External
-      name: api_public_read_requests_per_second
-      targetAverageValue: "5"
+    httpRequestsPerSecondTarget: "5"
 
 scheduling:
   apiCore:

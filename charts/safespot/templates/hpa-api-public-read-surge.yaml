@@ -14,14 +14,41 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Values.apiPublicReadSurge.name }}
+
+  # GitOps default. pre-scaling-controller patches this at runtime on disaster.
+  # ArgoCD ignoreDifferences on /spec/minReplicas prevents selfHeal from reverting the patch.
   minReplicas: {{ .Values.autoscaling.apiPublicReadSurge.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.apiPublicReadSurge.maxReplicas }}
+
   metrics:
-    - type: External
-      external:
+    # Custom Pods metric: scales surge pods based on http_requests_per_second per pod.
+    #
+    # PREREQUISITE (ops): Prometheus Adapter must be installed and
+    # custom.metrics.k8s.io/v1beta1 API must serve http_requests_per_second.
+    #
+    # BEHAVIOR without Prometheus Adapter:
+    # HPA reports ScalingActive=False (metric unavailable).
+    # pre-scaling-controller still controls surge activation via minReplicas patch.
+    - type: Pods
+      pods:
         metric:
-          name: {{ .Values.autoscaling.apiPublicReadSurge.metric.name }}
+          name: http_requests_per_second
         target:
           type: AverageValue
-          averageValue: {{ .Values.autoscaling.apiPublicReadSurge.metric.targetAverageValue | quote }}
+          averageValue: {{ .Values.autoscaling.apiPublicReadSurge.httpRequestsPerSecondTarget | quote }}
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 60
 {{- end }}

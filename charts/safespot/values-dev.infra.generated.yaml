@@ -42,6 +42,10 @@ externalIngestion:
   serviceAccount:
     roleArn: arn:aws:iam::154335823230:role/safespot-dev-api-service-iam-role-external-ingestion
 
+preScalingController:
+  serviceAccount:
+    roleArn: arn:aws:iam::154335823230:role/safespot-dev-api-service-iam-role-pre-scaling-controller
+
 scenarioSimulator:
   enabled: true
   serviceAccount:
@@ -121,6 +125,12 @@ scheduling:
     affinity: {}
 
   externalIngestion:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  preScalingController:
     nodeSelector:
       safespot.io/workload-class: app
     tolerations: []

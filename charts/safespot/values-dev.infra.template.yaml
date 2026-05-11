@@ -42,6 +42,10 @@ externalIngestion:
   serviceAccount:
     roleArn: ${EXTERNAL_INGESTION_IRSA_ROLE_ARN}
 
+preScalingController:
+  serviceAccount:
+    roleArn: ${PRE_SCALING_CONTROLLER_IRSA_ROLE_ARN}
+
 scenarioSimulator:
   enabled: true
   serviceAccount:
@@ -121,6 +125,12 @@ scheduling:
     affinity: {}
 
   externalIngestion:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  preScalingController:
     nodeSelector:
       safespot.io/workload-class: app
     tolerations: []

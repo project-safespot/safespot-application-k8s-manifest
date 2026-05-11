@@ -68,10 +68,44 @@ externalIngestion:
   serviceAccount:
     roleArn: ""
 
+preScalingController:
+  enabled: true
+  name: pre-scaling-controller
+  image:
+    repository: safespot/pre-scaling-controller
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  port: 8084
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      memory: "512Mi"
+  serviceAccount:
+    roleArn: ""
+  probes:
+    livenessPath: /actuator/health/liveness
+    readinessPath: /actuator/health/readiness
+  config:
+    enabled: "true"
+    targetHpaName: api-public-read-surge
+    pollingIntervalMs: "30000"
+    trigger:
+      minLevelRank: "3"
+      lookbackMinutes: "10"
+    surge:
+      normalMinReplicas: "1"
+      disasterMinReplicas: "3"
+      maxReplicas: "10"
+      cooldownSeconds: "1800"
+
 apiPublicReadSurge:
-  enabled: false
+  enabled: true
   name: api-public-read-surge
   replicas: 1
+  port: 8080
   resources:
     requests:
       cpu: "100m"
@@ -235,6 +269,11 @@ scheduling:
     affinity: {}
 
   externalIngestion:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  preScalingController:
     nodeSelector: {}
     tolerations: []
     affinity: {}

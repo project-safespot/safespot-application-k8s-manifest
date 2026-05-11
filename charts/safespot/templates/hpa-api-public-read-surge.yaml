@@ -14,9 +14,13 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Values.apiPublicReadSurge.name }}
+
+  # GitOps default. pre-scaling-controller patches this at runtime on disaster.
+  # ArgoCD ignoreDifferences on /spec/minReplicas prevents selfHeal from reverting the patch.
   minReplicas: {{ .Values.autoscaling.apiPublicReadSurge.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.apiPublicReadSurge.maxReplicas }}
   metrics:
+    # External metric is kept to preserve the aws-gitops-cleanup scaling contract.
     - type: External
       external:
         metric:
@@ -24,4 +28,17 @@ spec:
         target:
           type: AverageValue
           averageValue: {{ .Values.autoscaling.apiPublicReadSurge.metric.targetAverageValue | quote }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 60
 {{- end }}

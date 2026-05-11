@@ -1,0 +1,52 @@
+{{- if .Values.preScalingController.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.preScalingController.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.preScalingController.name }}
+    service: {{ .Values.preScalingController.name }}
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.preScalingController.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.preScalingController.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.preScalingController.name }}
+        service: {{ .Values.preScalingController.name }}
+        env: {{ .Values.global.env }}
+    spec:
+      serviceAccountName: {{ .Values.preScalingController.name }}
+      containers:
+        - name: {{ .Values.preScalingController.name }}
+          image: "{{ .Values.preScalingController.image.repository }}:{{ .Values.preScalingController.image.tag }}"
+          imagePullPolicy: {{ .Values.preScalingController.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.preScalingController.port }}
+          envFrom:
+            - configMapRef:
+                name: safespot-pre-scaling-controller-config
+            - secretRef:
+                name: {{ .Values.secret.existingName }}
+          resources:
+            {{- toYaml .Values.preScalingController.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.preScalingController.probes.readinessPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.preScalingController.probes.livenessPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+{{- end }}

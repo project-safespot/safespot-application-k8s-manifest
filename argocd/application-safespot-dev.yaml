@@ -19,6 +19,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: application
 
+  # pre-scaling-controller patches HPA/api-public-read-surge spec.minReplicas at runtime.
+  # Without this, ArgoCD selfHeal would revert the patch to the GitOps default value,
+  # disabling surge during an active disaster.
   ignoreDifferences:
     - group: autoscaling
       kind: HorizontalPodAutoscaler

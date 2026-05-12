@@ -169,10 +169,9 @@ autoscaling:
       targetAverageValue: "5"
 
 scheduling:
-  # api-core: MNG app node 전용, 2-node 균등 분산
   apiCore:
     nodeSelector:
-      safespot.io/node-group: app
+      safespot.io/workload-class: app
     tolerations: []
     affinity: {}
     topologySpreadConstraints:
@@ -183,39 +182,36 @@ scheduling:
           matchLabels:
             app: api-core
 
-  # api-public-read: MNG baseline 전용, HPA 비활성화로 replicas=1 고정
   apiPublicRead:
     nodeSelector:
-      safespot.io/node-group: app
+      safespot.io/workload-class: app
     tolerations: []
     affinity: {}
 
   externalIngestion:
     nodeSelector:
-      safespot.io/node-group: app
+      safespot.io/workload-class: app
     tolerations: []
     affinity: {}
 
   preScalingController:
     nodeSelector:
-      safespot.io/node-group: app
+      safespot.io/workload-class: app
     tolerations: []
     affinity: {}
 
   dbMigration:
     nodeSelector:
-      safespot.io/node-group: app
+      safespot.io/workload-class: app
     tolerations: []
     affinity: {}
 
-  # api-public-read-surge: Karpenter public-read-surge node pool 전용
-  # Karpenter NodePool taint: safespot.io/dedicated=public-read-surge:NoSchedule
   apiPublicReadSurge:
     nodeSelector:
-      safespot.io/node-group: public-surge
+      safespot.io/workload-class: public
     tolerations:
       - key: safespot.io/dedicated
         operator: Equal
-        value: public-read-surge
+        value: public-surge
         effect: NoSchedule
     affinity: {}

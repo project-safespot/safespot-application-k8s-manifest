@@ -17,6 +17,17 @@ secret:
       dataGoKrApiKey: /safespot/dev/secret/data-go-kr/service-key
 
 apiCore:
+  replicas: 4
+  resources:
+    requests:
+      cpu: "600m"
+      memory: "1024Mi"
+    limits:
+      cpu: "1"
+      memory: "1536Mi"
+  extraEnv:
+    - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+      value: "30"
   serviceAccount:
     roleArn: ${API_CORE_IRSA_ROLE_ARN}
   probes:
@@ -153,6 +164,15 @@ scheduling:
     affinity: {}
 
 autoscaling:
+  apiCore:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 60
+
+  apiPublicRead:
+    enabled: false
+
   apiPublicReadSurge:
     enabled: true
     minReplicas: 1

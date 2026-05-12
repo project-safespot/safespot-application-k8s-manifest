@@ -48,13 +48,7 @@ apiCore:
     - name: JAVA_TOOL_OPTIONS
       value: "-XX:MaxRAMPercentage=65 -XX:InitialRAMPercentage=40 -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
-      value: "8"
-    - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
-      value: "2"
-    - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
-      value: "5000"
-    - name: SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT
-      value: "2000"
+      value: "30"
     - name: SERVER_TOMCAT_THREADS_MAX
       value: "50"
     - name: SERVER_TOMCAT_THREADS_MIN_SPARE

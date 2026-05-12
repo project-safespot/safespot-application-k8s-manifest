@@ -54,7 +54,7 @@ scenarioSimulator:
 
 apiPublicReadSurge:
   enabled: true
-  replicas: 1
+  replicas: 0
 
 nginx:
   enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
@@ -84,10 +84,16 @@ configmap:
 
   sqs:
     coreEventQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-cache-refresh
+
+    # cache domain별 queue URL (신규 다중 queue 계약)
+    cacheRefreshQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-cache-refresh
+    readModelRefreshQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-readmodel-refresh
+    environmentCacheRefreshQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-environment-cache-refresh
+
+    # backward compatibility — cacheRefreshQueueUrl 과 동일값
     cacheRegenerationQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-cache-refresh
-    # Disaster cache regeneration uses the general cache_refresh queue.
-    # async-worker does not expose a dedicated disaster_cache_refresh queue.
-    # Do not map disasterQueueUrl to readmodel_refresh_queue_url.
+
+    # deprecated — 신규 필드로 대체됨
     disasterQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-cache-refresh
     environmentQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/154335823230/safespot-dev-async-worker-sqs-environment-cache-refresh
 

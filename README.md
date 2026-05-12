@@ -192,6 +192,52 @@ EKS dev: External Secrets Operator가 SSM Parameter Store (SecureString)에서 `
 
 ---
 
+## 9-1. api-public-read cache regeneration queue 라우팅
+
+`api-public-read`(와 `api-public-read-surge`)는 cache domain별로 서로 다른 SQS queue에 regeneration event를 발행한다.
+
+### cache domain → queue 매핑
+
+| cache domain | env var | values key | dev queue |
+|---|---|---|---|
+| shelter, evacuation entry | `SAFESPOT_CACHE_REGENERATION_QUEUES_CACHE_REFRESH_URL` | `configmap.sqs.cacheRefreshQueueUrl` | `safespot-dev-async-worker-sqs-cache-refresh` |
+| disaster | `SAFESPOT_CACHE_REGENERATION_QUEUES_READMODEL_REFRESH_URL` | `configmap.sqs.readModelRefreshQueueUrl` | `safespot-dev-async-worker-sqs-readmodel-refresh` |
+| weather, air_quality | `SAFESPOT_CACHE_REGENERATION_QUEUES_ENVIRONMENT_CACHE_REFRESH_URL` | `configmap.sqs.environmentCacheRefreshQueueUrl` | `safespot-dev-async-worker-sqs-environment-cache-refresh` |
+
+### env var 전체 목록 (safespot-api-public-read-config)
+
+application 최종 확정 설정(`safespot.aws.sqs.*`) 기준:
+
+```
+SAFESPOT_CACHE_REGENERATION_PUBLISHER_MODE=sqs
+
+# application이 실제 읽는 env (safespot.aws.sqs.* Spring relaxed binding)
+CACHE_REFRESH_QUEUE_URL=<cache-refresh-queue-url>
+READMODEL_REFRESH_QUEUE_URL=<readmodel-refresh-queue-url>
+ENVIRONMENT_CACHE_REFRESH_QUEUE_URL=<environment-cache-refresh-queue-url>
+
+# backward compatibility — 구버전 호환. 다중 queue 완전 전환 후 제거 예정.
+SAFESPOT_CACHE_REGENERATION_QUEUE_URL=<cache-refresh-queue-url>
+
+# deprecated — 옵션 A 임시 이름. 롤백 안전망용으로 유지 중. 안정화 후 제거.
+SAFESPOT_CACHE_REGENERATION_QUEUES_CACHE_REFRESH_URL=<cache-refresh-queue-url>
+SAFESPOT_CACHE_REGENERATION_QUEUES_READMODEL_REFRESH_URL=<readmodel-refresh-queue-url>
+SAFESPOT_CACHE_REGENERATION_QUEUES_ENVIRONMENT_CACHE_REFRESH_URL=<environment-cache-refresh-queue-url>
+```
+
+### api-public-read-surge env 주입 방식
+
+`api-public-read-surge` Deployment는 `api-public-read`와 동일한 ConfigMap(`safespot-api-public-read-config`)을 `envFrom`으로 참조한다. config drift가 없다.
+
+### 후속 작업 필요 사항
+
+| 저장소 | 작업 내용 |
+|---|---|
+| **k8s-manifest repo** | 배포 안정화 후 deprecated `SAFESPOT_CACHE_REGENERATION_QUEUES_*` env 3개 및 `SAFESPOT_CACHE_REGENERATION_QUEUE_URL` 제거 |
+| **terraform repo** | `safespot-dev-async-worker-sqs-readmodel-refresh` queue SSM parameter (`/safespot/dev/async-worker/readmodel-refresh-queue-url`) 실제 URL 확인; IRSA policy에 신규 queue ARN SendMessage 권한 추가 |
+
+---
+
 ## 10. 이미지 규칙
 
 ### 로컬 개발

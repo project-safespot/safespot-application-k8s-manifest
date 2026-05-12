@@ -84,10 +84,16 @@ configmap:
 
   sqs:
     coreEventQueueUrl: ${READMODEL_QUEUE_URL}
+
+    # cache domain별 queue URL (신규 다중 queue 계약)
+    cacheRefreshQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
+    readModelRefreshQueueUrl: ${READMODEL_REFRESH_QUEUE_URL}
+    environmentCacheRefreshQueueUrl: ${ENV_CACHE_QUEUE_URL}
+
+    # backward compatibility — cacheRefreshQueueUrl 과 동일값
     cacheRegenerationQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
-    # Disaster cache regeneration uses the general cache_refresh queue.
-    # async-worker does not expose a dedicated disaster_cache_refresh queue.
-    # Do not map disasterQueueUrl to readmodel_refresh_queue_url.
+
+    # deprecated — 신규 필드로 대체됨
     disasterQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
     environmentQueueUrl: ${ENV_CACHE_QUEUE_URL}
 

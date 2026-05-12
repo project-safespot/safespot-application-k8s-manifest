@@ -26,6 +26,11 @@ data:
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
   INGESTION_SQS_ENABLED: "true"
-  INGESTION_SQS_DISASTER_CACHE_QUEUE_URL: {{ .Values.configmap.sqs.disasterQueueUrl | quote }}
-  INGESTION_SQS_ENVIRONMENT_CACHE_QUEUE_URL: {{ .Values.configmap.sqs.environmentQueueUrl | quote }}
+  # application 최종 확정 env (ingestion.sqs.* property 기준)
+  INGESTION_SQS_CACHE_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.cacheRefreshQueueUrl | quote }}
+  INGESTION_SQS_READMODEL_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.readModelRefreshQueueUrl | quote }}
+  INGESTION_SQS_ENVIRONMENT_CACHE_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.environmentCacheRefreshQueueUrl | quote }}
+  # deprecated — backward compat: old app 버전 롤백 시 이전 property 이름으로 동작 보장
+  INGESTION_SQS_DISASTER_CACHE_QUEUE_URL: {{ .Values.configmap.sqs.readModelRefreshQueueUrl | quote }}
+  INGESTION_SQS_ENVIRONMENT_CACHE_QUEUE_URL: {{ .Values.configmap.sqs.environmentCacheRefreshQueueUrl | quote }}
 {{- end }}

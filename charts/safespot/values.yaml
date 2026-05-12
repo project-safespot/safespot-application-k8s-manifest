@@ -11,10 +11,19 @@ apiCore:
     pullPolicy: Always
   replicas: 1
   port: 8080
+  env:
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=60
+      -XX:InitialRAMPercentage=30
+      -XX:MaxGCPauseMillis=200
+      -XX:+ExitOnOutOfMemoryError
   resources:
     requests:
-      cpu: "300m"
+      cpu: "500m"
       memory: "1Gi"
+    limits:
+      memory: "2Gi"
   serviceAccount:
     roleArn: ""
   probes:
@@ -33,12 +42,19 @@ apiPublicRead:
     pullPolicy: Always
   replicas: 1
   port: 8080
+  env:
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=60
+      -XX:InitialRAMPercentage=30
+      -XX:MaxGCPauseMillis=200
+      -XX:+ExitOnOutOfMemoryError
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
-    limits:
+      cpu: "300m"
       memory: "512Mi"
+    limits:
+      memory: "1Gi"
   serviceAccount:
     roleArn: ""
   probes:
@@ -104,10 +120,19 @@ apiPublicReadSurge:
   name: api-public-read-surge
   replicas: 1
   port: 8080
+  env:
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=60
+      -XX:InitialRAMPercentage=30
+      -XX:MaxGCPauseMillis=200
+      -XX:+ExitOnOutOfMemoryError
   resources:
     requests:
       cpu: "1500m"
       memory: "2048Mi"
+    limits:
+      memory: "3072Mi"
 
 scenarioSimulator:
   enabled: false
@@ -163,8 +188,23 @@ configmap:
 
   sqs:
     coreEventQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-core-events
-    cacheRegenerationQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-regeneration
+
+    # cache domain별 queue URL (신규 다중 queue 계약)
+    # shelter/evacuation entry 관련 regeneration → cache-refresh queue
+    cacheRefreshQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-refresh
+    # disaster 관련 regeneration → readmodel-refresh queue
+    readModelRefreshQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-readmodel-refresh
+    # weather/air_quality 관련 regeneration → environment-cache-refresh queue
+    environmentCacheRefreshQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-environment-cache-refresh
+
+    # backward compatibility — 기존 application 버전 호환용. cacheRefreshQueueUrl과 동일값 유지.
+    # application이 다중 queue로 완전 전환되면 제거한다.
+    cacheRegenerationQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-refresh
+
+    # deprecated — 신규 필드로 대체됨. 기존 사용처 정리 후 제거한다.
+    # disasterQueueUrl → readModelRefreshQueueUrl 으로 대체
     disasterQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-disaster-events
+    # environmentQueueUrl → environmentCacheRefreshQueueUrl 으로 대체
     environmentQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-environment-events
 
   database:

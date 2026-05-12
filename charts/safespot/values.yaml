@@ -13,10 +13,10 @@ apiCore:
   port: 8080
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
+      cpu: "300m"
+      memory: "400Mi"
     limits:
-      memory: "512Mi"
+      memory: "700Mi"
   serviceAccount:
     roleArn: ""
   probes:
@@ -228,7 +228,7 @@ autoscaling:
   apiCore:
     enabled: true
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 8
     targetCPUUtilizationPercentage: 70
 
   apiPublicRead:
@@ -251,7 +251,7 @@ autoscaling:
   apiPublicReadSurge:
     enabled: true
     minReplicas: 1
-    maxReplicas: 10
+    maxReplicas: 20
     metric:
       type: External
       name: api_public_read_requests_per_second

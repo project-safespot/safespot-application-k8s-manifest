@@ -54,7 +54,7 @@ scenarioSimulator:
 
 apiPublicReadSurge:
   enabled: true
-  replicas: 1
+  replicas: 0
 
 nginx:
   enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요

@@ -20,23 +20,9 @@ apiCore:
   serviceAccount:
     roleArn: ""
   probes:
-    startupPath: /api/core/actuator/health/liveness
+    startupPath: /api/core/actuator/health
     livenessPath: /api/core/actuator/health/liveness
     readinessPath: /api/core/actuator/health/readiness
-    # Probe timing — override in environment-specific values to tune per-cluster
-    startupInitialDelaySeconds: 0
-    startupPeriodSeconds: 10
-    startupTimeoutSeconds: 5
-    startupFailureThreshold: 30
-    readinessInitialDelaySeconds: 0
-    readinessPeriodSeconds: 5
-    readinessTimeoutSeconds: 5
-    readinessFailureThreshold: 6
-    livenessInitialDelaySeconds: 0
-    livenessPeriodSeconds: 10
-    livenessTimeoutSeconds: 5
-    livenessFailureThreshold: 3
-  extraEnv: []
   service:
     annotations: {}
 
@@ -276,7 +262,6 @@ scheduling:
     nodeSelector: {}
     tolerations: []
     affinity: {}
-    topologySpreadConstraints: []
 
   apiPublicRead:
     nodeSelector: {}

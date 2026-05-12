@@ -17,44 +17,12 @@ secret:
       dataGoKrApiKey: /safespot/dev/secret/data-go-kr/service-key
 
 apiCore:
-  replicas: 4
-  resources:
-    requests:
-      cpu: "600m"
-      memory: "1024Mi"
-    limits:
-      cpu: "1"
-      memory: "1536Mi"
   serviceAccount:
     roleArn: arn:aws:iam::154335823230:role/safespot-dev-api-service-iam-role-api-core
   probes:
-    # startupProbe: liveness endpoint만 확인해 full-health DB check 타임아웃 회피
-    startupPath: /api/core/actuator/health/liveness
+    startupPath: /api/core/actuator/health
     livenessPath: /api/core/actuator/health/liveness
     readinessPath: /api/core/actuator/health/readiness
-    startupInitialDelaySeconds: 10
-    startupPeriodSeconds: 5
-    startupTimeoutSeconds: 5
-    startupFailureThreshold: 60
-    readinessInitialDelaySeconds: 20
-    readinessPeriodSeconds: 5
-    readinessTimeoutSeconds: 5
-    readinessFailureThreshold: 6
-    livenessInitialDelaySeconds: 60
-    livenessPeriodSeconds: 10
-    livenessTimeoutSeconds: 5
-    livenessFailureThreshold: 6
-  extraEnv:
-    - name: JAVA_TOOL_OPTIONS
-      value: "-XX:MaxRAMPercentage=65 -XX:InitialRAMPercentage=40 -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
-    - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
-      value: "30"
-    - name: SERVER_TOMCAT_THREADS_MAX
-      value: "50"
-    - name: SERVER_TOMCAT_THREADS_MIN_SPARE
-      value: "10"
-    - name: SERVER_TOMCAT_ACCEPT_COUNT
-      value: "50"
   service:
     annotations:
       alb.ingress.kubernetes.io/healthcheck-path: /api/core/actuator/health/readiness
@@ -143,44 +111,12 @@ ingress:
   front:
     enabled: false  # 프론트엔드는 CloudFront — nginx 라우트 불필요
 
-autoscaling:
-  # api-core: MNG 2대 기준 warm capacity 확보, maxReplicas=5로 burst 1개 허용
-  # Hikari maxPool=8 × 5 replicas = DB connection 40개 → RDS 안전 범위 내
-  apiCore:
-    enabled: true
-    minReplicas: 4
-    maxReplicas: 5
-    targetCPUUtilizationPercentage: 60
-
-  # api-public-read: MNG baseline 고정, HPA 비활성화
-  apiPublicRead:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 1
-    targetCPUUtilizationPercentage: 70
-
-  apiPublicReadSurge:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 20
-    metric:
-      type: External
-      name: api_public_read_requests_per_second
-      targetAverageValue: "5"
-
 scheduling:
   apiCore:
     nodeSelector:
       safespot.io/workload-class: app
     tolerations: []
     affinity: {}
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app: api-core
 
   apiPublicRead:
     nodeSelector:
@@ -215,3 +151,13 @@ scheduling:
         value: public-surge
         effect: NoSchedule
     affinity: {}
+
+autoscaling:
+  apiPublicReadSurge:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 20
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "5"

@@ -47,6 +47,10 @@ spec:
                 name: safespot-api-core-config
             - secretRef:
                 name: {{ .Values.secret.existingName }}
+          {{- with .Values.apiCore.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.apiCore.resources | nindent 12 }}
           startupProbe:

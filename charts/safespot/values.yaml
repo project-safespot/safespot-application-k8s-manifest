@@ -11,12 +11,21 @@ apiCore:
     pullPolicy: Always
   replicas: 1
   port: 8080
+  env:
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=65
+      -XX:InitialRAMPercentage=30
+      -XX:MinRAMPercentage=30
+      -XX:+ExitOnOutOfMemoryError
+      -Xlog:gc*:stdout:time,level,tags
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
+      cpu: "500m"
+      memory: "1Gi"
     limits:
-      memory: "512Mi"
+      cpu: "2"
+      memory: "2Gi"
 
 apiPublicRead:
   enabled: true
@@ -27,12 +36,21 @@ apiPublicRead:
     pullPolicy: Always
   replicas: 1
   port: 8080
+  env:
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=65
+      -XX:InitialRAMPercentage=30
+      -XX:MinRAMPercentage=30
+      -XX:+ExitOnOutOfMemoryError
+      -Xlog:gc*:stdout:time,level,tags
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
+      cpu: "500m"
+      memory: "1Gi"
     limits:
-      memory: "512Mi"
+      cpu: "2"
+      memory: "2Gi"
 
 externalIngestion:
   enabled: true

@@ -35,6 +35,10 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.scheduling.apiCore.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.apiCore.name }}
           image: "{{ .Values.apiCore.image.repository }}:{{ .Values.apiCore.image.tag }}"
@@ -47,27 +51,34 @@ spec:
                 name: safespot-api-core-config
             - secretRef:
                 name: {{ .Values.secret.existingName }}
+          {{- with .Values.apiCore.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.apiCore.resources | nindent 12 }}
           startupProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.startupPath }}
               port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 30
+            initialDelaySeconds: {{ .Values.apiCore.probes.startupInitialDelaySeconds | default 0 }}
+            timeoutSeconds: {{ .Values.apiCore.probes.startupTimeoutSeconds | default 5 }}
+            periodSeconds: {{ .Values.apiCore.probes.startupPeriodSeconds | default 10 }}
+            failureThreshold: {{ .Values.apiCore.probes.startupFailureThreshold | default 30 }}
           readinessProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.readinessPath }}
               port: http
-            timeoutSeconds: 5
-            periodSeconds: 5
-            failureThreshold: 6
+            initialDelaySeconds: {{ .Values.apiCore.probes.readinessInitialDelaySeconds | default 0 }}
+            timeoutSeconds: {{ .Values.apiCore.probes.readinessTimeoutSeconds | default 5 }}
+            periodSeconds: {{ .Values.apiCore.probes.readinessPeriodSeconds | default 5 }}
+            failureThreshold: {{ .Values.apiCore.probes.readinessFailureThreshold | default 6 }}
           livenessProbe:
             httpGet:
               path: {{ .Values.apiCore.probes.livenessPath }}
               port: http
-            timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: {{ .Values.apiCore.probes.livenessInitialDelaySeconds | default 0 }}
+            timeoutSeconds: {{ .Values.apiCore.probes.livenessTimeoutSeconds | default 5 }}
+            periodSeconds: {{ .Values.apiCore.probes.livenessPeriodSeconds | default 10 }}
+            failureThreshold: {{ .Values.apiCore.probes.livenessFailureThreshold | default 3 }}
 {{- end }}

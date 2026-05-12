@@ -14,9 +14,7 @@ apiCore:
   resources:
     requests:
       cpu: "300m"
-      memory: "400Mi"
-    limits:
-      memory: "700Mi"
+      memory: "1Gi"
   serviceAccount:
     roleArn: ""
   probes:
@@ -108,10 +106,8 @@ apiPublicReadSurge:
   port: 8080
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
-    limits:
-      memory: "512Mi"
+      cpu: "1500m"
+      memory: "2048Mi"
 
 scenarioSimulator:
   enabled: false

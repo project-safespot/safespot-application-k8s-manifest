@@ -153,10 +153,13 @@ scheduling:
     affinity: {}
 
 autoscaling:
+  apiCore:
+    minReplicas: 4
+    maxReplicas: 6
   apiPublicReadSurge:
     enabled: true
     minReplicas: 1
-    maxReplicas: 10
+    maxReplicas: 8
     metric:
       type: External
       name: api_public_read_requests_per_second

@@ -14,18 +14,18 @@ apiCore:
   env:
     JAVA_TOOL_OPTIONS: >
       -XX:+UseG1GC
-      -XX:MaxRAMPercentage=65
+      -XX:MaxRAMPercentage=60
       -XX:InitialRAMPercentage=30
       -XX:MinRAMPercentage=30
       -XX:+ExitOnOutOfMemoryError
       -Xlog:gc*:stdout:time,level,tags
   resources:
     requests:
-      cpu: "500m"
-      memory: "1Gi"
+      cpu: "300m"
+      memory: "512Mi"
     limits:
-      cpu: "2"
-      memory: "2Gi"
+      cpu: "1"
+      memory: "1Gi"
 
 apiPublicRead:
   enabled: true
@@ -39,18 +39,18 @@ apiPublicRead:
   env:
     JAVA_TOOL_OPTIONS: >
       -XX:+UseG1GC
-      -XX:MaxRAMPercentage=65
+      -XX:MaxRAMPercentage=60
       -XX:InitialRAMPercentage=30
       -XX:MinRAMPercentage=30
       -XX:+ExitOnOutOfMemoryError
       -Xlog:gc*:stdout:time,level,tags
   resources:
     requests:
-      cpu: "500m"
-      memory: "1Gi"
+      cpu: "300m"
+      memory: "512Mi"
     limits:
-      cpu: "2"
-      memory: "2Gi"
+      cpu: "1"
+      memory: "1Gi"
 
 externalIngestion:
   enabled: true

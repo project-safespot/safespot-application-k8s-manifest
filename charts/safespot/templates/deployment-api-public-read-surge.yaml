@@ -10,6 +10,9 @@ metadata:
     component: surge
     env: {{ .Values.global.env }}
 spec:
+  # 운영 기본값: replicas=1 (values.yaml).
+  # 부하테스트: values-loadtest.yaml overlay로 replicas=6 override.
+  # kubectl patch/scale만으로 변경하면 ArgoCD selfHeal이 values.yaml 기본값으로 되돌린다.
   replicas: {{ .Values.apiPublicReadSurge.replicas }}
   selector:
     matchLabels:

@@ -841,7 +841,134 @@ scenarioSimulator:
 
 ---
 
-## 21. 주의사항
+## 21. Load test mode (부하테스트 모드)
+
+### 왜 kubectl scale/patch를 쓰지 않는가
+
+`kubectl scale` 또는 `kubectl patch`로 runtime에 replicas를 올려도 ArgoCD selfHeal 또는 pre-scaling-controller가 곧바로 Git desired state(values.yaml 기본값)로 되돌린다.
+
+- **ArgoCD selfHeal**: Deployment `spec.replicas`가 Git과 다르면 sync 시 덮어씀.
+- **pre-scaling-controller**: 재난 해소/cooldown 정책에 따라 HPA `spec.minReplicas`를 `normalMinReplicas=1`로 patch.
+- 결과: 추가 pod가 Created 직후 Terminating → 부하테스트 capacity가 올라가지 않음.
+
+따라서 부하테스트는 Git/Helm overlay를 통해 desired state 자체를 변경해야 한다.
+
+---
+
+### 부하테스트 적용 방법
+
+#### 1. 로컬 Helm 렌더링 검증
+
+```bash
+helm template safespot charts/safespot \
+  -f charts/safespot/values.yaml \
+  -f charts/safespot/values-loadtest.yaml \
+  > /tmp/safespot-loadtest.yaml
+
+grep -n "replicas: 6" /tmp/safespot-loadtest.yaml
+grep -n "minReplicas: 6" /tmp/safespot-loadtest.yaml
+grep -n "maxReplicas: 6" /tmp/safespot-loadtest.yaml
+grep -n "name: pre-scaling-controller" /tmp/safespot-loadtest.yaml  # 출력 없어야 함
+```
+
+#### 2. ArgoCD Application에 overlay 적용
+
+`argocd/application-safespot-dev.yaml`의 `sources[].helm.valueFiles`에 `values-loadtest.yaml`을 임시로 추가한다:
+
+```yaml
+helm:
+  valueFiles:
+    - values-dev.infra.generated.yaml
+    - values-dev.images.yaml
+    - values-loadtest.yaml          # 부하테스트 시 임시 추가
+```
+
+변경 후 kubectl apply 및 ArgoCD sync:
+
+```bash
+kubectl apply -f argocd/application-safespot-dev.yaml
+kubectl -n argocd wait --for=condition=Synced application/safespot-dev --timeout=120s
+```
+
+또는 ArgoCD UI에서 `App Details > Parameters > valueFiles`에 `values-loadtest.yaml` 추가 후 Sync.
+
+#### 3. Pod 안정화 확인
+
+```bash
+kubectl -n application get deploy api-public-read-surge
+kubectl -n application get hpa api-public-read-surge
+kubectl -n application get pod -o wide -l app=api-public-read-surge
+kubectl get nodes -L safespot.io/node-group
+```
+
+**기대값:**
+
+| 항목 | 기대값 |
+|---|---|
+| Deployment READY | 6/6 |
+| HPA MINPODS | 6 |
+| HPA MAXPODS | 6 |
+| surge pod 수 | 6개 Running |
+| Pending pod | 0 |
+| surge pod 배치 노드 | public-surge 또는 Karpenter nodepool |
+
+---
+
+### 테스트 후 원복 방법
+
+`argocd/application-safespot-dev.yaml`에서 `values-loadtest.yaml` 라인을 제거한다:
+
+```yaml
+helm:
+  valueFiles:
+    - values-dev.infra.generated.yaml
+    - values-dev.images.yaml
+    # values-loadtest.yaml 제거
+```
+
+변경 후 kubectl apply 및 ArgoCD sync:
+
+```bash
+kubectl apply -f argocd/application-safespot-dev.yaml
+kubectl -n argocd wait --for=condition=Synced application/safespot-dev --timeout=120s
+```
+
+원복 확인:
+
+```bash
+kubectl -n application get deploy api-public-read-surge
+kubectl -n application get hpa api-public-read-surge
+```
+
+**기대값:**
+
+| 항목 | 기대값 |
+|---|---|
+| Deployment READY | 1/1 |
+| HPA MINPODS | 1 |
+| HPA MAXPODS | 20 |
+| pre-scaling-controller | Running |
+
+---
+
+### HPA metric 확인 방법
+
+surge HPA metric(`api_public_read_requests_per_second`)이 `<unknown>`으로 표시되는 경우 아래 순서로 점검한다:
+
+```bash
+# External metrics API 등록 확인
+kubectl get --raw /apis/external.metrics.k8s.io/v1beta1 | jq .
+
+# 특정 metric 값 확인
+kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1/namespaces/application/api_public_read_requests_per_second" | jq .
+
+# HPA 상태 및 이벤트 확인
+kubectl -n application describe hpa api-public-read-surge
+```
+
+---
+
+## 22. 주의사항
 
 * 이 저장소에서 인프라 리소스를 생성하지 않는다.
 * 환경별 설정은 반드시 values 파일로 관리한다.

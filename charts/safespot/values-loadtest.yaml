@@ -1,0 +1,26 @@
+# 부하테스트 overlay values
+#
+# 용도: 부하테스트 중 api-public-read-surge를 고정 6개로 운영하기 위한 overlay.
+# 적용: ArgoCD Application에 이 파일을 임시로 추가하거나, helm template -f 로 로컬 검증.
+# 원복: ArgoCD Application values 목록에서 이 파일 제거 후 sync.
+#
+# 주의: 운영 기본값(values.yaml)은 변경하지 않는다.
+
+apiPublicReadSurge:
+  replicas: 6
+
+autoscaling:
+  apiPublicReadSurge:
+    enabled: true
+    minReplicas: 6
+    maxReplicas: 6
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "5"
+
+# 부하테스트 중 pre-scaling-controller를 비활성화한다.
+# pre-scaling-controller는 disaster 상태/cooldown 정책에 따라 HPA minReplicas를
+# 운영 기본값(normalMinReplicas=1)으로 되돌릴 수 있으므로, 테스트 기간 동안 꺼둔다.
+preScalingController:
+  enabled: false

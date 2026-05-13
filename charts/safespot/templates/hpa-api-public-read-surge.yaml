@@ -15,8 +15,14 @@ spec:
     kind: Deployment
     name: {{ .Values.apiPublicReadSurge.name }}
 
-  # GitOps default. pre-scaling-controller patches this at runtime on disaster.
-  # ArgoCD ignoreDifferences on /spec/minReplicas prevents selfHeal from reverting the patch.
+  # GitOps default: minReplicas=1, maxReplicas=20 (values.yaml).
+  # 부하테스트 overlay(values-loadtest.yaml): minReplicas=6, maxReplicas=6 고정.
+  # kubectl patch만으로 변경하면 ArgoCD 또는 pre-scaling-controller가 운영 기본값으로 되돌린다.
+  # HPA metric이 <unknown>인 경우 prometheus-adapter external metrics API를 별도 점검한다:
+  #   kubectl get --raw /apis/external.metrics.k8s.io/v1beta1 | jq .
+  #   kubectl -n application describe hpa api-public-read-surge
+  # pre-scaling-controller runtime patch 허용 필드: /spec/minReplicas
+  # ArgoCD ignoreDifferences: /spec/minReplicas (application-safespot-dev.yaml 참고)
   minReplicas: {{ .Values.autoscaling.apiPublicReadSurge.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.apiPublicReadSurge.maxReplicas }}
   metrics:

@@ -108,6 +108,11 @@ ingress:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: ${ALB_CERTIFICATE_ARN}
     alb.ingress.kubernetes.io/ssl-redirect: "443"
+  alb:
+    accessLogs:
+      enabled: true
+      bucket: safespot-dev-ops-logs
+      prefix: alb
   apiCore:
     path: /api/core
     pathType: Prefix

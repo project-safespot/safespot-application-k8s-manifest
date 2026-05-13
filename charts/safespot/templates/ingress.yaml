@@ -11,6 +11,10 @@ metadata:
     {{- end }}
     alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.apiCore.healthcheckPath }}
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
+    {{- $lbAttrs := include "safespot.albLoadBalancerAttributes" . | trim }}
+    {{- if $lbAttrs }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: {{ $lbAttrs | quote }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

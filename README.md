@@ -968,7 +968,157 @@ kubectl -n application describe hpa api-public-read-surge
 
 ---
 
-## 22. 주의사항
+## 22. ALB Access Log 설정
+
+### 개요
+
+AWS Load Balancer Controller가 생성하는 ALB의 access log를 S3에 적재하는 기능이다.
+S3 bucket 생성 및 bucket policy는 Terraform 또는 별도 팀 작업에서 관리한다.
+이 저장소는 bucket name/prefix를 values로 받아 Ingress annotation에 반영한다.
+
+### 확정된 S3 정책
+
+| 항목 | 값 |
+|---|---|
+| S3 bucket | `safespot-dev-ops-logs` |
+| prefix | `alb` |
+| AWS account | `154335823230` |
+| bucket policy Resource | `arn:aws:s3:::safespot-dev-ops-logs/alb/AWSLogs/154335823230/*` |
+
+**중요: annotation prefix와 bucket policy Resource 경로가 반드시 일치해야 한다.**
+
+ALB는 `s3://<bucket>/<prefix>/AWSLogs/<account-id>/...` 경로에 로그를 쓴다.
+annotation에서 `access_logs.s3.prefix=alb`로 설정하면 실제 S3 object path는 `alb/AWSLogs/154335823230/...`이다.
+bucket policy Resource에 `alb/AWSLogs/154335823230/*`가 허용되어 있어야 ALB가 로그를 쓸 수 있다.
+
+prefix를 바꾸면 bucket policy Resource도 반드시 함께 변경해야 한다.
+
+### Terraform 선행 조건
+
+ALB access log를 활성화하기 전에 아래가 완료되어야 한다:
+
+| 리소스 | 내용 |
+|---|---|
+| `aws_s3_bucket` | `safespot-dev-ops-logs` bucket 생성 |
+| `aws_s3_bucket_policy` | ALB delivery principal(`delivery.logs.amazonaws.com`)에 `s3:PutObject` 허용, Resource: `arn:aws:s3:::safespot-dev-ops-logs/alb/AWSLogs/154335823230/*` |
+
+> S3 bucket policy 없이 ALB access log를 활성화하면 ALB가 로그를 쓰지 못하고 오류가 발생한다. Ingress annotation을 먼저 적용해도 ALB attribute 설정 자체는 성공하지만 로그가 쌓이지 않는다.
+
+### Values 구조
+
+```yaml
+# values.yaml (기본 — 비활성. nginx/local 환경에서 annotation 렌더링 안 됨)
+ingress:
+  alb:
+    loadBalancerAttributes: []   # 추가 ALB attributes (key=value 목록)
+    accessLogs:
+      enabled: false
+      bucket: ""
+      # prefix는 bucket policy Resource 경로와 반드시 일치해야 한다.
+      # policy Resource: arn:aws:s3:::safespot-dev-ops-logs/alb/AWSLogs/154335823230/*
+      prefix: "alb"
+
+# values-dev.infra.template.yaml (EKS dev — bucket 고정값, SSM 불필요)
+ingress:
+  alb:
+    accessLogs:
+      enabled: true
+      bucket: safespot-dev-ops-logs
+      prefix: alb
+```
+
+### 렌더링 결과 annotation
+
+```yaml
+alb.ingress.kubernetes.io/load-balancer-attributes: "access_logs.s3.enabled=true,access_logs.s3.bucket=safespot-dev-ops-logs,access_logs.s3.prefix=alb"
+```
+
+`ingress.className: alb`인 경우에만 이 annotation이 렌더링된다. `className: nginx`(로컬 환경) 에서는 렌더링되지 않는다.
+
+추가 ALB attributes가 필요한 경우 `ingress.alb.loadBalancerAttributes`에 문자열 목록으로 추가한다:
+
+```yaml
+ingress:
+  alb:
+    loadBalancerAttributes:
+      - "deletion_protection.enabled=true"
+      - "idle_timeout.timeout_seconds=120"
+```
+
+`ingress.annotations`에 `alb.ingress.kubernetes.io/load-balancer-attributes` 키를 직접 넣지 않는다. 중복 annotation이 생성되므로 반드시 `ingress.alb.loadBalancerAttributes` / `ingress.alb.accessLogs`로 관리한다.
+
+### Helm 로컬 검증
+
+```bash
+# 기본 values(nginx ingress) — annotation 없어야 함
+helm template safespot charts/safespot \
+  -f charts/safespot/values.yaml \
+  > /tmp/safespot-default.yaml
+grep "load-balancer-attributes" /tmp/safespot-default.yaml && echo "UNEXPECTED" || echo "OK (expected)"
+
+# EKS dev values — access log annotation 확인
+helm template safespot charts/safespot \
+  -f charts/safespot/values.yaml \
+  -f charts/safespot/values-dev.infra.generated.yaml \
+  > /tmp/safespot-dev.yaml
+
+grep -n "load-balancer-attributes" /tmp/safespot-dev.yaml
+grep -n "access_logs.s3.enabled=true" /tmp/safespot-dev.yaml
+grep -n "access_logs.s3.bucket=safespot-dev-ops-logs" /tmp/safespot-dev.yaml
+grep -n "access_logs.s3.prefix=alb" /tmp/safespot-dev.yaml
+```
+
+기대 출력 (두 Ingress 리소스에 각 1줄):
+```
+alb.ingress.kubernetes.io/load-balancer-attributes: "access_logs.s3.enabled=true,access_logs.s3.bucket=safespot-dev-ops-logs,access_logs.s3.prefix=alb"
+```
+
+### ArgoCD sync 후 배포 검증
+
+```bash
+# Ingress annotation 확인
+kubectl -n application get ingress -o yaml | grep -A5 "load-balancer-attributes"
+
+# ALB attribute 확인 (ALB ARN은 kubectl describe ingress에서 확인)
+aws elbv2 describe-load-balancer-attributes \
+  --load-balancer-arn <ALB_ARN> \
+  --region ap-northeast-2 \
+  | jq '.Attributes[] | select(.Key | startswith("access_logs"))'
+```
+
+기대 결과:
+```json
+{"Key": "access_logs.s3.enabled", "Value": "true"}
+{"Key": "access_logs.s3.bucket",  "Value": "safespot-dev-ops-logs"}
+{"Key": "access_logs.s3.prefix",  "Value": "alb"}
+```
+
+### S3 로그 적재 확인
+
+ALB sync 후 약 5분 지연 후 로그가 쌓인다. annotation과 ALB attribute가 먼저 맞는지 확인한 뒤 S3를 확인한다.
+
+```bash
+# S3 object 확인
+aws s3 ls s3://safespot-dev-ops-logs/alb/AWSLogs/154335823230/ --recursive | head -20
+
+# 오늘 날짜 로그 확인
+aws s3 ls "s3://safespot-dev-ops-logs/alb/AWSLogs/154335823230/elasticloadbalancing/ap-northeast-2/$(date +%Y/%m/%d)/"
+```
+
+### 비활성화 (rollback)
+
+`values-dev.infra.generated.yaml`에서 `accessLogs.enabled`를 `false`로 변경 후 ArgoCD sync:
+
+```yaml
+ingress:
+  alb:
+    accessLogs:
+      enabled: false
+```
+
+---
+
+## 23. 주의사항
 
 * 이 저장소에서 인프라 리소스를 생성하지 않는다.
 * 환경별 설정은 반드시 values 파일로 관리한다.

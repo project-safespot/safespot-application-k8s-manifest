@@ -247,6 +247,17 @@ ingress:
   groupName: safespot-api
   host: safespot.local
   annotations: {}
+  alb:
+    # Extra ALB load-balancer-attributes passed as a list of "key=value" strings.
+    # Merged with accessLogs attributes when rendered. nginx ingress는 무시됨.
+    loadBalancerAttributes: []
+    accessLogs:
+      enabled: false   # EKS dev: values-dev.infra.generated.yaml에서 true로 override
+      bucket: ""       # S3 bucket name (dev: safespot-dev-ops-logs)
+      # prefix는 S3 bucket policy Resource 경로와 반드시 일치해야 한다.
+      # policy Resource: arn:aws:s3:::safespot-dev-ops-logs/alb/AWSLogs/154335823230/*
+      # annotation prefix 'alb' → S3 object path: alb/AWSLogs/<account-id>/...
+      prefix: "alb"
   apiCore:
     path: /api/core(/|$)(.*)
     pathType: ImplementationSpecific

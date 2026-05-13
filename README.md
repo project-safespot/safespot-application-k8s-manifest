@@ -855,6 +855,25 @@ scenarioSimulator:
 
 ---
 
+### Loadtest overlay 의도 (`values-loadtest.yaml`)
+
+| 워크로드 | 항목 | loadtest 값 | 운영 기본값 |
+|---|---|---|---|
+| api-public-read normal | HPA min/max | **1/1** | 1/5 |
+| api-public-read-surge | replicas | **6** | 1 |
+| api-public-read-surge | HPA min/max | **6/6** | 1/20 |
+| pre-scaling-controller | enabled | **false** | true |
+
+**normal api-public-read를 1/1로 고정하는 이유:**
+
+직전 1500 TPS 테스트에서 normal HPA가 5 replicas까지 scale-out을 시도하면서 3개가 Pending 상태로 남았다. Pending pod의 node provisioning 시도가 surge node pool 기준 측정에 노이즈를 추가한다. 이번 테스트 목표는 `api-public-read-surge 6 replicas + c5a.xlarge surge node pool` 조합의 성능 검증이므로, normal scale-out을 완전히 차단해 테스트 변수를 제거한다.
+
+**Deployment의 `spec.replicas` 동작 주의:**
+
+`deployment-api-public-read.yaml`은 `autoscaling.apiPublicRead.enabled: true`인 경우 `spec.replicas`를 렌더링하지 않는다. HPA가 replicas를 관리하기 때문이다. loadtest overlay에서도 HPA를 `enabled: true`, `min/max: 1/1`로 고정하므로 HPA가 1 replica를 유지한다.
+
+---
+
 ### 부하테스트 적용 방법
 
 #### 1. 로컬 Helm 렌더링 검증
@@ -865,15 +884,21 @@ helm template safespot charts/safespot \
   -f charts/safespot/values-loadtest.yaml \
   > /tmp/safespot-loadtest.yaml
 
-grep -n "replicas: 6" /tmp/safespot-loadtest.yaml
+# surge HPA 확인
 grep -n "minReplicas: 6" /tmp/safespot-loadtest.yaml
 grep -n "maxReplicas: 6" /tmp/safespot-loadtest.yaml
-grep -n "name: pre-scaling-controller" /tmp/safespot-loadtest.yaml  # 출력 없어야 함
+
+# normal HPA 확인
+grep -n "minReplicas: 1" /tmp/safespot-loadtest.yaml
+grep -n "maxReplicas: 1" /tmp/safespot-loadtest.yaml
+
+# pre-scaling-controller 없어야 함
+grep -n "name: pre-scaling-controller" /tmp/safespot-loadtest.yaml
 ```
 
 #### 2. ArgoCD Application에 overlay 적용
 
-`argocd/application-safespot-dev.yaml`의 `sources[].helm.valueFiles`에 `values-loadtest.yaml`을 임시로 추가한다:
+`argocd/application-safespot-dev.yaml`의 `helm.valueFiles`에 `values-loadtest.yaml`을 임시로 추가한다:
 
 ```yaml
 helm:
@@ -890,27 +915,28 @@ kubectl apply -f argocd/application-safespot-dev.yaml
 kubectl -n argocd wait --for=condition=Synced application/safespot-dev --timeout=120s
 ```
 
-또는 ArgoCD UI에서 `App Details > Parameters > valueFiles`에 `values-loadtest.yaml` 추가 후 Sync.
-
-#### 3. Pod 안정화 확인
+#### 3. 테스트 전 기대 상태 확인
 
 ```bash
-kubectl -n application get deploy api-public-read-surge
-kubectl -n application get hpa api-public-read-surge
-kubectl -n application get pod -o wide -l app=api-public-read-surge
-kubectl get nodes -L safespot.io/node-group
+kubectl -n application get deploy api-public-read api-public-read-surge
+kubectl -n application get hpa api-public-read api-public-read-surge
+kubectl -n application get pod -o wide -l 'app in (api-public-read,api-public-read-surge)'
+kubectl -n application get deploy pre-scaling-controller
+kubectl get nodes -L safespot.io/node-group,node.kubernetes.io/instance-type
+kubectl get nodeclaims -o wide
 ```
 
 **기대값:**
 
 | 항목 | 기대값 |
 |---|---|
-| Deployment READY | 6/6 |
-| HPA MINPODS | 6 |
-| HPA MAXPODS | 6 |
-| surge pod 수 | 6개 Running |
+| api-public-read READY | 1/1 |
+| api-public-read HPA MINPODS/MAXPODS | 1/1 |
+| api-public-read-surge READY | 6/6 |
+| api-public-read-surge HPA MINPODS/MAXPODS | 6/6 |
 | Pending pod | 0 |
-| surge pod 배치 노드 | public-surge 또는 Karpenter nodepool |
+| surge pod 배치 노드 | c5a.xlarge (api-public-read nodepool) |
+| pre-scaling-controller | 없음 (deployment 존재하지 않음) |
 
 ---
 
@@ -926,27 +952,28 @@ helm:
     # values-loadtest.yaml 제거
 ```
 
-변경 후 kubectl apply 및 ArgoCD sync:
+변경 후 kubectl apply 및 ArgoCD sync (`--prune` 필요 — pre-scaling-controller Deployment 복구):
 
 ```bash
 kubectl apply -f argocd/application-safespot-dev.yaml
+# ArgoCD automated sync에 prune: true가 이미 설정되어 있으므로 자동 처리됨
 kubectl -n argocd wait --for=condition=Synced application/safespot-dev --timeout=120s
 ```
 
 원복 확인:
 
 ```bash
-kubectl -n application get deploy api-public-read-surge
-kubectl -n application get hpa api-public-read-surge
+kubectl -n application get deploy api-public-read api-public-read-surge
+kubectl -n application get hpa api-public-read api-public-read-surge
+kubectl -n application get deploy pre-scaling-controller
 ```
 
 **기대값:**
 
 | 항목 | 기대값 |
 |---|---|
-| Deployment READY | 1/1 |
-| HPA MINPODS | 1 |
-| HPA MAXPODS | 20 |
+| api-public-read HPA MINPODS/MAXPODS | 1/5 |
+| api-public-read-surge HPA MINPODS/MAXPODS | 1/20 |
 | pre-scaling-controller | Running |
 
 ---

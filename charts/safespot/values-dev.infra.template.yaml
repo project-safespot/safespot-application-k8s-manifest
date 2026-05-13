@@ -165,8 +165,8 @@ scheduling:
 
 autoscaling:
   apiCore:
-    minReplicas: 4
-    maxReplicas: 6
+    minReplicas: 3
+    maxReplicas: 5
   apiPublicReadSurge:
     enabled: true
     minReplicas: 1

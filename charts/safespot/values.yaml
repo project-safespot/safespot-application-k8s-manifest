@@ -49,6 +49,8 @@ apiPublicRead:
       -XX:InitialRAMPercentage=30
       -XX:MaxGCPauseMillis=200
       -XX:+ExitOnOutOfMemoryError
+  hikari:
+    maximumPoolSize: "30"
   resources:
     requests:
       cpu: "300m"

@@ -41,4 +41,7 @@ data:
   {{- if .Values.configmap.apiPublicRead.contextPath }}
   SERVER_SERVLET_CONTEXT_PATH: {{ .Values.configmap.apiPublicRead.contextPath | quote }}
   {{- end }}
+  {{- if .Values.apiPublicRead.warmup.enabled }}
+  SAFESPOT_WARMUP_ENABLED: "true"
+  {{- end }}
 {{- end }}

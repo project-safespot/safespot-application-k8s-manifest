@@ -51,6 +51,8 @@ apiPublicRead:
       -XX:+ExitOnOutOfMemoryError
   hikari:
     maximumPoolSize: "30"
+  warmup:
+    enabled: false
   resources:
     requests:
       cpu: "300m"
@@ -242,6 +244,7 @@ secret:
       seoulApiKey: ""
       moisApiKey: ""
       dataGoKrApiKey: ""
+      warmupSecret: ""
 
 ingress:
   enabled: true

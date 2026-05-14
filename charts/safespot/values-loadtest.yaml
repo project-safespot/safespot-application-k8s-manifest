@@ -14,8 +14,20 @@
 # 주의: 운영 기본값(values.yaml)은 변경하지 않는다.
 
 # normal api-public-read: 1 replica 고정
+# warmup.enabled=true: disaster cache warmup endpoint 활성화 (부하테스트 전용)
+#   endpoint: POST /api/public/internal/test/cache-warmup/disasters
+#   인증: X-Warmup-Secret 헤더 (safespot-secret의 SAFESPOT_WARMUP_SECRET 참조)
+#   동작: DisasterReadModelWarmupRequested 이벤트를 READMODEL_REFRESH_QUEUE_URL 로 발행
+#
+# TODO(security): /api/public/internal/test/** 경로가 ALB를 통해 외부에 노출됨.
+#   X-Warmup-Secret 헤더 인증이 1차 방어선이나, 부하테스트 완료 후 반드시
+#   warmup.enabled=false 로 원복하여 endpoint를 비활성화한다.
+#   장기적으로는 ALB listener rule 또는 WAF rule로 /internal/test/** 차단 권장.
+#   (Terraform: safespot-ops repo의 ALB 리소스에서 조건부 listener rule 추가)
 apiPublicRead:
   replicas: 1
+  warmup:
+    enabled: true
 
 # api-public-read-surge: 6 replicas 고정
 apiPublicReadSurge:

@@ -15,6 +15,7 @@ secret:
       seoulApiKey: /safespot/dev/secret/seoul/service-key
       moisApiKey: /safespot/dev/secret/mois/api-key
       dataGoKrApiKey: /safespot/dev/secret/data-go-kr/service-key
+      warmupSecret: /safespot/dev/secret/warmup/warmup-secret
 
 apiCore:
   serviceAccount:

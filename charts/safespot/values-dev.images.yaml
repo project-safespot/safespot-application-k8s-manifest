@@ -4,25 +4,25 @@
 apiCore:
   image:
     repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-api-core
-    tag: "1d2d239-91-1"
+    tag: "d97ee91-92-1"
     pullPolicy: Always
 apiPublicRead:
   image:
     repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-api-public-read
-    tag: "1d2d239-91-1"
+    tag: "d97ee91-92-1"
     pullPolicy: Always
 externalIngestion:
   image:
     repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-external-ingestion
-    tag: "1d2d239-91-1"
+    tag: "d97ee91-92-1"
     pullPolicy: Always
 scenarioSimulator:
   image:
     repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-scenario-simulator
-    tag: "1d2d239-91-1"
+    tag: "d97ee91-92-1"
     pullPolicy: Always
 preScalingController:
   image:
     repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-pre-scaling-controller
-    tag: "1d2d239-91-1"
+    tag: "d97ee91-92-1"
     pullPolicy: Always

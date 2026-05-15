@@ -163,6 +163,25 @@ scenarioSimulator:
     readinessPath: /actuator/health/readiness
     livenessPath: /actuator/health/liveness
 
+readmodelRegenCronJobs:
+  enabled: true
+  serviceAccountName: api-public-read  # cache/readmodel refresh queue SendMessage 권한이 있는 기존 IRSA SA 재사용
+  image:
+    repository: public.ecr.aws/aws-cli/aws-cli
+    tag: "2"
+    pullPolicy: IfNotPresent
+  awsRegion: ap-northeast-2
+  ttlSecondsAfterFinished: 300
+  shelterStatic:
+    enabled: true
+    schedule: "0 * * * *"
+  shelterStatus:
+    enabled: true
+    schedule: "*/15 * * * *"
+  disaster:
+    enabled: true
+    schedule: "*/5 * * * *"
+
 nginx:
   enabled: true
   name: nginx
@@ -336,6 +355,11 @@ scheduling:
     affinity: {}
 
   apiPublicReadSurge:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  readmodelRegenCronJobs:
     nodeSelector: {}
     tolerations: []
     affinity: {}

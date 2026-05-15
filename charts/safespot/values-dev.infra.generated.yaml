@@ -53,6 +53,9 @@ scenarioSimulator:
     create: false
     name: api-core  # dev 임시: api-core IRSA SA 재사용. 추후 전용 role로 분리 권장
 
+readmodelRegenCronJobs:
+  serviceAccountName: api-public-read
+
 apiPublicReadSurge:
   enabled: true
   replicas: 1
@@ -162,6 +165,12 @@ scheduling:
         operator: Equal
         value: public-surge
         effect: NoSchedule
+    affinity: {}
+
+  readmodelRegenCronJobs:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
     affinity: {}
 
 autoscaling:

@@ -1,0 +1,251 @@
+{{- if .Values.readmodelRegenCronJobs.enabled }}
+{{- $root := . }}
+{{- $cfg := .Values.readmodelRegenCronJobs }}
+{{- if $cfg.shelterStatic.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shelter-static-readmodel-regen
+  namespace: {{ $root.Values.global.namespace }}
+  labels:
+    app: shelter-static-readmodel-regen
+    service: shelter-static-readmodel-regen
+    env: {{ $root.Values.global.env }}
+spec:
+  schedule: {{ $cfg.shelterStatic.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: {{ $cfg.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          labels:
+            app: shelter-static-readmodel-regen
+            service: shelter-static-readmodel-regen
+            env: {{ $root.Values.global.env }}
+        spec:
+          serviceAccountName: {{ $cfg.serviceAccountName }}
+          restartPolicy: Never
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: sqs-publisher
+              image: "{{ $cfg.image.repository }}:{{ $cfg.image.tag }}"
+              imagePullPolicy: {{ $cfg.image.pullPolicy }}
+              command: ["/bin/sh", "-ceu"]
+              args:
+                - |
+                  message_index=1
+                  run_id="$(date -u +"%Y%m%dT%H%M%SZ")-$$"
+
+                  send_message() {
+                    queue_url="$1"
+                    target_type_json="$2"
+                    cache_key_json="$3"
+                    cache_key_family="$4"
+                    target_key="$5"
+                    timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+                    suffix="${run_id}-${message_index}"
+                    event_id="scheduled-regen-${suffix}"
+                    trace_id="scheduled-regen-trace-${suffix}"
+                    idempotency_key="scheduled-regen:${target_key}"
+                    message_body="$(cat <<EOF
+                  {"eventType":"CacheRegenerationRequested","eventId":"${event_id}","occurredAt":"${timestamp}","producer":"scheduled-regen","traceId":"${trace_id}","idempotencyKey":"${idempotency_key}","payload":{"cacheKey":${cache_key_json},"cacheKeyFamily":"${cache_key_family}","requestedAt":"${timestamp}","reason":"scheduled_regen","schemaVersion":"1","targetType":${target_type_json},"targetIds":null}}
+                  EOF
+                  )"
+
+                    if [ -n "${AWS_ENDPOINT_URL:-}" ]; then
+                      aws --region "${AWS_REGION}" --endpoint-url "${AWS_ENDPOINT_URL}" sqs send-message --queue-url "${queue_url}" --message-body "${message_body}" >/dev/null
+                    else
+                      aws --region "${AWS_REGION}" sqs send-message --queue-url "${queue_url}" --message-body "${message_body}" >/dev/null
+                    fi
+
+                    message_index=$((message_index + 1))
+                  }
+
+                  send_message "${CACHE_REFRESH_QUEUE_URL}" '"SHELTER_MAP_ITEMS"' 'null' "shelter_map_item" "SHELTER_MAP_ITEMS"
+                  send_message "${CACHE_REFRESH_QUEUE_URL}" '"SHELTER_GEO_INDEX"' 'null' "shelter_geo_index" "SHELTER_GEO_INDEX"
+                  send_message "${CACHE_REFRESH_QUEUE_URL}" '"SHELTER_MAP_TILES"' 'null' "shelter_map_tile" "SHELTER_MAP_TILES"
+              env:
+                - name: AWS_REGION
+                  value: {{ $cfg.awsRegion | quote }}
+                - name: CACHE_REFRESH_QUEUE_URL
+                  value: {{ $root.Values.configmap.sqs.cacheRefreshQueueUrl | quote }}
+                {{- if $root.Values.configmap.aws.endpoint }}
+                - name: AWS_ENDPOINT_URL
+                  value: {{ $root.Values.configmap.aws.endpoint | quote }}
+                {{- end }}
+---
+{{- end }}
+{{- if $cfg.shelterStatus.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: shelter-status-regen
+  namespace: {{ $root.Values.global.namespace }}
+  labels:
+    app: shelter-status-regen
+    service: shelter-status-regen
+    env: {{ $root.Values.global.env }}
+spec:
+  schedule: {{ $cfg.shelterStatus.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: {{ $cfg.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          labels:
+            app: shelter-status-regen
+            service: shelter-status-regen
+            env: {{ $root.Values.global.env }}
+        spec:
+          serviceAccountName: {{ $cfg.serviceAccountName }}
+          restartPolicy: Never
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: sqs-publisher
+              image: "{{ $cfg.image.repository }}:{{ $cfg.image.tag }}"
+              imagePullPolicy: {{ $cfg.image.pullPolicy }}
+              command: ["/bin/sh", "-ceu"]
+              args:
+                - |
+                  run_id="$(date -u +"%Y%m%dT%H%M%SZ")-$$"
+                  timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+                  suffix="${run_id}"
+                  event_id="scheduled-regen-${suffix}"
+                  trace_id="scheduled-regen-trace-${suffix}"
+                  idempotency_key="scheduled-regen:SHELTER_STATUS"
+                  message_body="$(cat <<EOF
+                  {"eventType":"CacheRegenerationRequested","eventId":"${event_id}","occurredAt":"${timestamp}","producer":"scheduled-regen","traceId":"${trace_id}","idempotencyKey":"${idempotency_key}","payload":{"cacheKey":null,"cacheKeyFamily":"shelter_status","requestedAt":"${timestamp}","reason":"scheduled_regen","schemaVersion":"1","targetType":"SHELTER_STATUS","targetIds":null}}
+                  EOF
+                  )"
+
+                  if [ -n "${AWS_ENDPOINT_URL:-}" ]; then
+                    aws --region "${AWS_REGION}" --endpoint-url "${AWS_ENDPOINT_URL}" sqs send-message --queue-url "${CACHE_REFRESH_QUEUE_URL}" --message-body "${message_body}" >/dev/null
+                  else
+                    aws --region "${AWS_REGION}" sqs send-message --queue-url "${CACHE_REFRESH_QUEUE_URL}" --message-body "${message_body}" >/dev/null
+                  fi
+              env:
+                - name: AWS_REGION
+                  value: {{ $cfg.awsRegion | quote }}
+                - name: CACHE_REFRESH_QUEUE_URL
+                  value: {{ $root.Values.configmap.sqs.cacheRefreshQueueUrl | quote }}
+                {{- if $root.Values.configmap.aws.endpoint }}
+                - name: AWS_ENDPOINT_URL
+                  value: {{ $root.Values.configmap.aws.endpoint | quote }}
+                {{- end }}
+---
+{{- end }}
+{{- if $cfg.disaster.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: disaster-readmodel-regen
+  namespace: {{ $root.Values.global.namespace }}
+  labels:
+    app: disaster-readmodel-regen
+    service: disaster-readmodel-regen
+    env: {{ $root.Values.global.env }}
+spec:
+  schedule: {{ $cfg.disaster.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: {{ $cfg.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          labels:
+            app: disaster-readmodel-regen
+            service: disaster-readmodel-regen
+            env: {{ $root.Values.global.env }}
+        spec:
+          serviceAccountName: {{ $cfg.serviceAccountName }}
+          restartPolicy: Never
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $root.Values.scheduling.readmodelRegenCronJobs.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: sqs-publisher
+              image: "{{ $cfg.image.repository }}:{{ $cfg.image.tag }}"
+              imagePullPolicy: {{ $cfg.image.pullPolicy }}
+              command: ["/bin/sh", "-ceu"]
+              args:
+                - |
+                  message_index=1
+                  run_id="$(date -u +"%Y%m%dT%H%M%SZ")-$$"
+
+                  send_message() {
+                    cache_key="$1"
+                    timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+                    suffix="${run_id}-${message_index}"
+                    event_id="scheduled-regen-${suffix}"
+                    trace_id="scheduled-regen-trace-${suffix}"
+                    idempotency_key="scheduled-regen:${cache_key}"
+                    message_body="$(cat <<EOF
+                  {"eventType":"CacheRegenerationRequested","eventId":"${event_id}","occurredAt":"${timestamp}","producer":"scheduled-regen","traceId":"${trace_id}","idempotencyKey":"${idempotency_key}","payload":{"cacheKey":"${cache_key}","cacheKeyFamily":"disaster_messages","requestedAt":"${timestamp}","reason":"scheduled_regen","schemaVersion":"1","targetType":null,"targetIds":null}}
+                  EOF
+                  )"
+
+                    if [ -n "${AWS_ENDPOINT_URL:-}" ]; then
+                      aws --region "${AWS_REGION}" --endpoint-url "${AWS_ENDPOINT_URL}" sqs send-message --queue-url "${READMODEL_REFRESH_QUEUE_URL}" --message-body "${message_body}" >/dev/null
+                    else
+                      aws --region "${AWS_REGION}" sqs send-message --queue-url "${READMODEL_REFRESH_QUEUE_URL}" --message-body "${message_body}" >/dev/null
+                    fi
+
+                    message_index=$((message_index + 1))
+                  }
+
+                  send_message "disaster:messages:recent:seoul"
+                  send_message "disaster:message:core:seoul"
+                  send_message "disaster:messages:list:seoul"
+              env:
+                - name: AWS_REGION
+                  value: {{ $cfg.awsRegion | quote }}
+                - name: READMODEL_REFRESH_QUEUE_URL
+                  value: {{ $root.Values.configmap.sqs.readModelRefreshQueueUrl | quote }}
+                {{- if $root.Values.configmap.aws.endpoint }}
+                - name: AWS_ENDPOINT_URL
+                  value: {{ $root.Values.configmap.aws.endpoint | quote }}
+                {{- end }}
+{{- end }}
+{{- end }}

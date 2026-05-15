@@ -61,7 +61,7 @@ spec:
                     suffix="${run_id}-${message_index}"
                     event_id="scheduled-regen-${suffix}"
                     trace_id="scheduled-regen-trace-${suffix}"
-                    idempotency_key="scheduled-regen:${target_key}"
+                    idempotency_key="scheduled-regen:${target_key}:${run_id}"
                     message_body="$(cat <<EOF
                   {"eventType":"CacheRegenerationRequested","eventId":"${event_id}","occurredAt":"${timestamp}","producer":"scheduled-regen","traceId":"${trace_id}","idempotencyKey":"${idempotency_key}","payload":{"cacheKey":${cache_key_json},"cacheKeyFamily":"${cache_key_family}","requestedAt":"${timestamp}","reason":"scheduled_regen","schemaVersion":"1","targetType":${target_type_json},"targetIds":null}}
                   EOF
@@ -142,7 +142,7 @@ spec:
                   suffix="${run_id}"
                   event_id="scheduled-regen-${suffix}"
                   trace_id="scheduled-regen-trace-${suffix}"
-                  idempotency_key="scheduled-regen:SHELTER_STATUS"
+                  idempotency_key="scheduled-regen:SHELTER_STATUS:${run_id}"
                   message_body="$(cat <<EOF
                   {"eventType":"CacheRegenerationRequested","eventId":"${event_id}","occurredAt":"${timestamp}","producer":"scheduled-regen","traceId":"${trace_id}","idempotencyKey":"${idempotency_key}","payload":{"cacheKey":null,"cacheKeyFamily":"shelter_status","requestedAt":"${timestamp}","reason":"scheduled_regen","schemaVersion":"1","targetType":"SHELTER_STATUS","targetIds":null}}
                   EOF
@@ -220,7 +220,7 @@ spec:
                     suffix="${run_id}-${message_index}"
                     event_id="scheduled-regen-${suffix}"
                     trace_id="scheduled-regen-trace-${suffix}"
-                    idempotency_key="scheduled-regen:${cache_key}"
+                    idempotency_key="scheduled-regen:${cache_key}:${run_id}"
                     message_body="$(cat <<EOF
                   {"eventType":"CacheRegenerationRequested","eventId":"${event_id}","occurredAt":"${timestamp}","producer":"scheduled-regen","traceId":"${trace_id}","idempotencyKey":"${idempotency_key}","payload":{"cacheKey":"${cache_key}","cacheKeyFamily":"disaster_messages","requestedAt":"${timestamp}","reason":"scheduled_regen","schemaVersion":"1","targetType":null,"targetIds":null}}
                   EOF

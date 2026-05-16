@@ -67,6 +67,15 @@ apiPublicRead:
     readinessPath: /api/public/actuator/health/readiness
   service:
     annotations: {}
+  routing:
+    mode: service
+    backendService: api-public-read
+    weighted:
+      actionName: api-public-read-weighted
+      baseServiceName: api-public-read
+      surgeServiceName: api-public-read-surge
+      baseWeight: 100
+      surgeWeight: 0
 
 externalIngestion:
   enabled: true
@@ -137,6 +146,9 @@ apiPublicReadSurge:
       memory: "2048Mi"
     limits:
       memory: "3072Mi"
+  service:
+    name: api-public-read-surge
+    annotations: {}
 
 scenarioSimulator:
   enabled: false

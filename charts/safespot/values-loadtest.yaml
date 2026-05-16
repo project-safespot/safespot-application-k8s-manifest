@@ -28,6 +28,14 @@ apiPublicRead:
   replicas: 1
   warmup:
     enabled: true
+  routing:
+    mode: weighted
+    weighted:
+      actionName: api-public-read-weighted
+      baseServiceName: api-public-read
+      surgeServiceName: api-public-read-surge
+      baseWeight: 0
+      surgeWeight: 100
 
 # api-public-read-surge: 6 replicas 고정
 apiPublicReadSurge:

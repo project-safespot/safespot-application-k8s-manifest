@@ -25,6 +25,8 @@ data:
   SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.writerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  INGESTION_SCHEDULE_KMA_WEATHER_CRON: {{ .Values.configmap.externalIngestion.kmaWeatherCron | quote }}
+  INGESTION_SCHEDULE_AIR_KOREA_CRON: {{ .Values.configmap.externalIngestion.airKoreaCron | quote }}
   INGESTION_SQS_ENABLED: "true"
   # application 최종 확정 env (ingestion.sqs.* property 기준)
   INGESTION_SQS_CACHE_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.cacheRefreshQueueUrl | quote }}

@@ -201,6 +201,10 @@ nginx:
 configmap:
   springProfilesActive: dev
 
+  externalIngestion:
+    kmaWeatherCron: "0 10,25,40,55 * * * *"
+    airKoreaCron: "0 10,25,40,55 * * * *"
+
   redis:
     host: redis.safespot-cache.svc.cluster.local
     port: "6379"

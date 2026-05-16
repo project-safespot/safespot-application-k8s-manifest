@@ -66,6 +66,10 @@ nginx:
 configmap:
   springProfilesActive: ${SPRING_PROFILE}
 
+  externalIngestion:
+    kmaWeatherCron: "0 10,25,40,55 * * * *"
+    airKoreaCron: "0 10,25,40,55 * * * *"
+
   aws:
     region: ${AWS_REGION}
     endpoint: ""  # LocalStack 제거 — 실 AWS 사용

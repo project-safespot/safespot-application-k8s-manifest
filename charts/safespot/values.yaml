@@ -50,7 +50,7 @@ apiPublicRead:
       -XX:MaxGCPauseMillis=200
       -XX:+ExitOnOutOfMemoryError
   hikari:
-    maximumPoolSize: "30"
+    maximumPoolSize: "10"
   warmup:
     enabled: false
   resources:

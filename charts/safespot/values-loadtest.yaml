@@ -39,7 +39,7 @@ apiPublicRead:
 
 # api-public-read-surge: 6 replicas 고정
 apiPublicReadSurge:
-  replicas: 6
+  replicas: 4
 
 autoscaling:
   # normal api-public-read HPA: 1/1 고정 (CPU scale-out 차단)

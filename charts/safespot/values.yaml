@@ -168,7 +168,7 @@ readmodelRegenCronJobs:
   serviceAccountName: api-public-read  # cache/readmodel refresh queue SendMessage 권한이 있는 기존 IRSA SA 재사용
   image:
     repository: public.ecr.aws/aws-cli/aws-cli
-    tag: "2"
+    tag: "latest"
     pullPolicy: IfNotPresent
   awsRegion: ap-northeast-2
   ttlSecondsAfterFinished: 300

@@ -27,8 +27,6 @@ spec:
         component: surge
         env: {{ .Values.global.env }}
     spec:
-      # Service/api-public-read selects on service: api-public-read,
-      # so surge pods receive traffic automatically.
       serviceAccountName: {{ .Values.apiPublicRead.name }}
       {{- with .Values.scheduling.apiPublicReadSurge.nodeSelector }}
       nodeSelector:

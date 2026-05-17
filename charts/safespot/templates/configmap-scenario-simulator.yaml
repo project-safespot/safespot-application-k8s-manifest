@@ -26,6 +26,6 @@ data:
   AWS_ENDPOINT_URL: {{ .Values.configmap.aws.endpoint | quote }}
   SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   {{- end }}
-  SAFESPOT_SQS_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
-  SQS_CORE_EVENT_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
+  SIMULATOR_SQS_CACHE_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.cacheRefreshQueueUrl | quote }}
+  SIMULATOR_SQS_READMODEL_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.readModelRefreshQueueUrl | quote }}
 {{- end }}

@@ -39,7 +39,7 @@ apiPublicRead:
 
 # api-public-read-surge: 6 replicas 고정
 apiPublicReadSurge:
-  replicas: 8
+  replicas: 10
 
 autoscaling:
   # normal api-public-read HPA: 1/1 고정 (CPU scale-out 차단)
@@ -52,8 +52,8 @@ autoscaling:
   # surge HPA: 6/6 고정 (ArgoCD drift 및 HPA scale 변수 제거)
   apiPublicReadSurge:
     enabled: true
-    minReplicas: 8
-    maxReplicas: 8
+    minReplicas: 10
+    maxReplicas: 10
     metric:
       type: External
       name: api_public_read_requests_per_second

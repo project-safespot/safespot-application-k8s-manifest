@@ -11,7 +11,8 @@ metadata:
 data:
   SPRING_PROFILES_ACTIVE: {{ .Values.configmap.springProfilesActive | quote }}
   SERVER_PORT: {{ .Values.scenarioSimulator.port | quote }}
-  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_ENABLED: "false"
+  SIMULATOR_SQS_ENABLED: "true"
   DB_HOST: {{ .Values.configmap.database.writerHost | quote }}
   DB_PORT: {{ .Values.configmap.database.port | quote }}
   DB_NAME: {{ .Values.configmap.database.name | quote }}

@@ -1,0 +1,39 @@
+{{- if .Values.preScalingController.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: safespot-pre-scaling-controller-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.preScalingController.name }}
+    service: {{ .Values.preScalingController.name }}
+    env: {{ .Values.global.env }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.configmap.springProfilesActive | quote }}
+  SPRING_ENV: {{ .Values.global.env | quote }}
+  DB_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.readerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
+  SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.readerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
+
+  # Controller on/off switch
+  PRE_SCALING_ENABLED: {{ .Values.preScalingController.config.enabled | quote }}
+
+  # Kubernetes target
+  K8S_NAMESPACE: {{ .Values.global.namespace | quote }}
+  PRE_SCALING_NAMESPACE: {{ .Values.global.namespace | quote }}
+  PRE_SCALING_TARGET_HPA_NAME: {{ .Values.preScalingController.config.targetHpaName | quote }}
+  PRE_SCALING_POLLING_INTERVAL_MS: {{ .Values.preScalingController.config.pollingIntervalMs | quote }}
+
+  # Trigger policy
+  # disasterTypes is not injected via env var: Spring Boot list binding requires
+  # indexed keys (PRE_SCALING_TRIGGER_DISASTER_TYPES_0=...) which are error-prone.
+  # The default list [EARTHQUAKE, FLOOD, LANDSLIDE] is declared in application.yml
+  # and does not change per environment. Override in application.yml if needed.
+  PRE_SCALING_TRIGGER_MIN_LEVEL_RANK: {{ .Values.preScalingController.config.trigger.minLevelRank | quote }}
+  PRE_SCALING_TRIGGER_LOOKBACK_MINUTES: {{ .Values.preScalingController.config.trigger.lookbackMinutes | quote }}
+
+  # Surge policy
+  PRE_SCALING_SURGE_NORMAL_MIN_REPLICAS: {{ .Values.preScalingController.config.surge.normalMinReplicas | quote }}
+  PRE_SCALING_SURGE_DISASTER_MIN_REPLICAS: {{ .Values.preScalingController.config.surge.disasterMinReplicas | quote }}
+  PRE_SCALING_SURGE_MAX_REPLICAS: {{ .Values.preScalingController.config.surge.maxReplicas | quote }}
+  PRE_SCALING_SURGE_COOLDOWN_SECONDS: {{ .Values.preScalingController.config.surge.cooldownSeconds | quote }}
+{{- end }}

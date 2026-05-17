@@ -20,6 +20,19 @@ spec:
         service: {{ .Values.externalIngestion.name }}
         env: {{ .Values.global.env }}
     spec:
+      serviceAccountName: {{ .Values.externalIngestion.name }}
+      {{- with .Values.scheduling.externalIngestion.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.externalIngestion.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.externalIngestion.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.externalIngestion.name }}
           image: "{{ .Values.externalIngestion.image.repository }}:{{ .Values.externalIngestion.image.tag }}"

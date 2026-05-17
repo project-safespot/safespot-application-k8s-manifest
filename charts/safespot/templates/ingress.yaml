@@ -2,12 +2,19 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: safespot-ingress
+  name: safespot-api-core-ingress
   namespace: {{ .Values.global.namespace }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.groupName }}
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.apiCore.healthcheckPath }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
+    {{- $lbAttrs := include "safespot.albLoadBalancerAttributes" . | trim }}
+    {{- if $lbAttrs }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: {{ $lbAttrs | quote }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
@@ -18,21 +25,7 @@ spec:
             pathType: {{ .Values.ingress.apiCore.pathType }}
             backend:
               service:
-                name: api-core
-                port:
-                  number: 8080
-          - path: {{ .Values.ingress.apiPublicRead.path }}
-            pathType: {{ .Values.ingress.apiPublicRead.pathType }}
-            backend:
-              service:
-                name: api-public-read
-                port:
-                  number: 8080
-          - path: {{ .Values.ingress.front.path }}
-            pathType: {{ .Values.ingress.front.pathType }}
-            backend:
-              service:
-                name: nginx
+                name: {{ .Values.apiCore.name }}
                 port:
                   number: 80
 {{- end }}

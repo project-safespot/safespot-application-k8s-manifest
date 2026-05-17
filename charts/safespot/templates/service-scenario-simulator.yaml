@@ -1,0 +1,21 @@
+{{- if .Values.scenarioSimulator.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.scenarioSimulator.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.scenarioSimulator.name }}
+    service: {{ .Values.scenarioSimulator.name }}
+    env: {{ .Values.global.env }}
+spec:
+  selector:
+    app: {{ .Values.scenarioSimulator.name }}
+    service: {{ .Values.scenarioSimulator.name }}
+  ports:
+    - name: http
+      port: {{ .Values.scenarioSimulator.port }}
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

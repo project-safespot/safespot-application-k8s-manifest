@@ -1,0 +1,50 @@
+{{- if and .Values.autoscaling.apiPublicReadSurge.enabled .Values.apiPublicReadSurge.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.apiPublicReadSurge.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.apiPublicReadSurge.name }}
+    service: {{ .Values.apiPublicRead.name }}
+    component: surge
+    env: {{ .Values.global.env }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.apiPublicReadSurge.name }}
+
+  # GitOps default: minReplicas=1, maxReplicas=20 (values.yaml).
+  # 부하테스트 overlay(values-loadtest.yaml): minReplicas=6, maxReplicas=6 고정.
+  # kubectl patch만으로 변경하면 ArgoCD 또는 pre-scaling-controller가 운영 기본값으로 되돌린다.
+  # HPA metric이 <unknown>인 경우 prometheus-adapter external metrics API를 별도 점검한다:
+  #   kubectl get --raw /apis/external.metrics.k8s.io/v1beta1 | jq .
+  #   kubectl -n application describe hpa api-public-read-surge
+  # pre-scaling-controller runtime patch 허용 필드: /spec/minReplicas
+  # ArgoCD ignoreDifferences: /spec/minReplicas (application-safespot-dev.yaml 참고)
+  minReplicas: {{ .Values.autoscaling.apiPublicReadSurge.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.apiPublicReadSurge.maxReplicas }}
+  metrics:
+    # External metric is kept to preserve the aws-gitops-cleanup scaling contract.
+    - type: External
+      external:
+        metric:
+          name: {{ .Values.autoscaling.apiPublicReadSurge.metric.name }}
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.autoscaling.apiPublicReadSurge.metric.targetAverageValue | quote }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 60
+{{- end }}

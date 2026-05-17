@@ -22,9 +22,26 @@ data:
   SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   SAFESPOT_AWS_SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   {{- end }}
+  SPRING_FLYWAY_ENABLED: "false"
   SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.readerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: {{ .Values.apiPublicRead.hikari.maximumPoolSize | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
+  SAFESPOT_CACHE_REGENERATION_PUBLISHER_MODE: "sqs"
+  # backward compatibility — 기존 단일 queue 사용 버전과의 호환 유지
   SAFESPOT_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
-  SQS_CACHE_REGENERATION_QUEUE_URL: {{ .Values.configmap.sqs.cacheRegenerationQueueUrl | quote }}
+  # application 최종 확정 env (safespot.aws.sqs.* property 기준)
+  CACHE_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.cacheRefreshQueueUrl | quote }}
+  READMODEL_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.readModelRefreshQueueUrl | quote }}
+  ENVIRONMENT_CACHE_REFRESH_QUEUE_URL: {{ .Values.configmap.sqs.environmentCacheRefreshQueueUrl | quote }}
+  # deprecated — 옵션 A 임시 이름. 구버전 배포와의 롤백 안전망용으로 유지.
+  SAFESPOT_CACHE_REGENERATION_QUEUES_CACHE_REFRESH_URL: {{ .Values.configmap.sqs.cacheRefreshQueueUrl | quote }}
+  SAFESPOT_CACHE_REGENERATION_QUEUES_READMODEL_REFRESH_URL: {{ .Values.configmap.sqs.readModelRefreshQueueUrl | quote }}
+  SAFESPOT_CACHE_REGENERATION_QUEUES_ENVIRONMENT_CACHE_REFRESH_URL: {{ .Values.configmap.sqs.environmentCacheRefreshQueueUrl | quote }}
+  {{- if .Values.configmap.apiPublicRead.contextPath }}
+  SERVER_SERVLET_CONTEXT_PATH: {{ .Values.configmap.apiPublicRead.contextPath | quote }}
+  {{- end }}
+  {{- if .Values.apiPublicRead.warmup.enabled }}
+  SAFESPOT_WARMUP_ENABLED: "true"
+  {{- end }}
 {{- end }}

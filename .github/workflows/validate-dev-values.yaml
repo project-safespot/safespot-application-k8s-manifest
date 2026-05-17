@@ -1,0 +1,48 @@
+name: Validate dev values
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'charts/safespot/values-dev.infra.generated.yaml'
+      - 'charts/safespot/values-dev.images.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/safespot/values-dev.infra.generated.yaml'
+      - 'charts/safespot/values-dev.images.yaml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Check for unresolved placeholders
+        run: |
+          # shellcheck disable=SC2016
+          if grep -E 'PENDING_|PLACEHOLDER|CHANGE_ME|\$\{[A-Z0-9_]+\}' \
+              charts/safespot/values-dev.infra.generated.yaml \
+              charts/safespot/values-dev.images.yaml; then
+            echo "ERROR: unresolved placeholder found in dev values — run render-dev-values workflow first"
+            exit 1
+          fi
+          echo "Placeholder check passed"
+
+      - name: Helm lint
+        run: |
+          helm lint charts/safespot \
+            -f charts/safespot/values-dev.infra.generated.yaml \
+            -f charts/safespot/values-dev.images.yaml
+
+      - name: Helm template
+        run: |
+          helm template safespot charts/safespot \
+            -f charts/safespot/values-dev.infra.generated.yaml \
+            -f charts/safespot/values-dev.images.yaml > /dev/null
+          echo "Helm template render passed"

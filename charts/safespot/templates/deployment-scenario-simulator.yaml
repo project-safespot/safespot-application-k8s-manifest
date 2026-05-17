@@ -1,0 +1,59 @@
+{{- if .Values.scenarioSimulator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.scenarioSimulator.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.scenarioSimulator.name }}
+    service: {{ .Values.scenarioSimulator.name }}
+    env: {{ .Values.global.env }}
+spec:
+  replicas: {{ .Values.scenarioSimulator.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.scenarioSimulator.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.scenarioSimulator.name }}
+        service: {{ .Values.scenarioSimulator.name }}
+        env: {{ .Values.global.env }}
+    spec:
+      serviceAccountName: {{ .Values.scenarioSimulator.serviceAccount.name }}
+      containers:
+        - name: {{ .Values.scenarioSimulator.name }}
+          image: "{{ .Values.scenarioSimulator.image.repository }}:{{ .Values.scenarioSimulator.image.tag }}"
+          imagePullPolicy: {{ .Values.scenarioSimulator.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.scenarioSimulator.port }}
+          envFrom:
+            - configMapRef:
+                name: safespot-scenario-simulator-config
+            - secretRef:
+                name: {{ .Values.secret.existingName }}
+          resources:
+            {{- toYaml .Values.scenarioSimulator.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.scenarioSimulator.probes.startupPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 15
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.scenarioSimulator.probes.readinessPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.scenarioSimulator.probes.livenessPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+{{- end }}

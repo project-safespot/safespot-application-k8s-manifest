@@ -1,0 +1,191 @@
+global:
+  env: dev
+
+secret:
+  create: false
+  existingName: safespot-secret
+  externalSecret:
+    enabled: true
+    secretStoreName: ssm-parameter-store
+    remoteRefs:
+      dbUser: /safespot/dev/secret/rds/username
+      dbPassword: /safespot/dev/secret/rds/password
+      jwtAccessTokenKey: /safespot/dev/secret/jwt/access-token-key
+      jwtRefreshTokenKey: /safespot/dev/secret/jwt/refresh-token-key
+      seoulApiKey: /safespot/dev/secret/seoul/service-key
+      moisApiKey: /safespot/dev/secret/mois/api-key
+      dataGoKrApiKey: /safespot/dev/secret/data-go-kr/service-key
+      warmupSecret: /safespot/dev/secret/warmup/warmup-secret
+
+apiCore:
+  serviceAccount:
+    roleArn: ${API_CORE_IRSA_ROLE_ARN}
+  probes:
+    startupPath: /api/core/actuator/health
+    livenessPath: /api/core/actuator/health/liveness
+    readinessPath: /api/core/actuator/health/readiness
+  service:
+    annotations:
+      alb.ingress.kubernetes.io/healthcheck-path: /api/core/actuator/health/readiness
+
+apiPublicRead:
+  serviceAccount:
+    roleArn: ${API_PUBLIC_READ_IRSA_ROLE_ARN}
+  probes:
+    startupPath: /api/public/actuator/health
+    livenessPath: /api/public/actuator/health/liveness
+    readinessPath: /api/public/actuator/health/readiness
+  service:
+    annotations:
+      alb.ingress.kubernetes.io/healthcheck-path: /api/public/actuator/health/readiness
+
+externalIngestion:
+  serviceAccount:
+    roleArn: ${EXTERNAL_INGESTION_IRSA_ROLE_ARN}
+
+preScalingController:
+  serviceAccount:
+    roleArn: ${PRE_SCALING_CONTROLLER_IRSA_ROLE_ARN}
+
+scenarioSimulator:
+  enabled: true
+  serviceAccount:
+    create: false
+    name: api-core  # dev 임시: api-core IRSA SA 재사용. 추후 전용 role로 분리 권장
+
+readmodelRegenCronJobs:
+  serviceAccountName: api-public-read
+
+apiPublicReadSurge:
+  enabled: true
+  replicas: 1
+
+nginx:
+  enabled: false  # 프론트엔드는 CloudFront 정적 배포 — EKS에 nginx 불필요
+
+configmap:
+  springProfilesActive: ${SPRING_PROFILE}
+
+  externalIngestion:
+    kmaWeatherCron: "0 10,25,40,55 * * * *"
+    airKoreaCron: "0 10,25,40,55 * * * *"
+
+  aws:
+    region: ${AWS_REGION}
+    endpoint: ""  # LocalStack 제거 — 실 AWS 사용
+
+  database:
+    writerHost: ${RDS_WRITER_ENDPOINT}
+    readerHost: ${RDS_READER_ENDPOINT}
+    port: "${DB_PORT}"
+    name: ${DB_NAME}
+
+  # ALB는 path rewrite 없이 전달 → Spring Boot context-path로 prefix 흡수
+  apiCore:
+    contextPath: ${API_CORE_CONTEXT_PATH}
+  apiPublicRead:
+    contextPath: ${API_PUBLIC_CONTEXT_PATH}
+
+  redis:
+    host: ${REDIS_ENDPOINT}
+    port: "${REDIS_PORT}"
+
+  sqs:
+    coreEventQueueUrl: ${READMODEL_QUEUE_URL}
+
+    # cache domain별 queue URL (신규 다중 queue 계약)
+    cacheRefreshQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
+    readModelRefreshQueueUrl: ${READMODEL_REFRESH_QUEUE_URL}
+    environmentCacheRefreshQueueUrl: ${ENV_CACHE_QUEUE_URL}
+
+    # backward compatibility — cacheRefreshQueueUrl 과 동일값
+    cacheRegenerationQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
+
+    # deprecated — 신규 필드로 대체됨
+    disasterQueueUrl: ${CACHE_REFRESH_QUEUE_URL}
+    environmentQueueUrl: ${ENV_CACHE_QUEUE_URL}
+
+ingress:
+  className: alb
+  groupName: safespot-dev-api
+  host: ${API_HOST}
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: safespot-dev-alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: ${ALB_CERTIFICATE_ARN}
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+  alb:
+    accessLogs:
+      enabled: true
+      bucket: safespot-dev-ops-logs
+      prefix: alb
+  apiCore:
+    path: /api/core
+    pathType: Prefix
+  apiPublicRead:
+    path: /api/public
+    pathType: Prefix
+  front:
+    enabled: false  # 프론트엔드는 CloudFront — nginx 라우트 불필요
+
+scheduling:
+  apiCore:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  apiPublicRead:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  externalIngestion:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  preScalingController:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  dbMigration:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+  apiPublicReadSurge:
+    nodeSelector:
+      safespot.io/workload-class: public
+    tolerations:
+      - key: safespot.io/dedicated
+        operator: Equal
+        value: public-surge
+        effect: NoSchedule
+    affinity: {}
+
+  readmodelRegenCronJobs:
+    nodeSelector:
+      safespot.io/workload-class: app
+    tolerations: []
+    affinity: {}
+
+autoscaling:
+  apiCore:
+    minReplicas: 3
+    maxReplicas: 5
+  apiPublicReadSurge:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 8
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "5"

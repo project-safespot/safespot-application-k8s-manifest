@@ -11,12 +11,27 @@ apiCore:
     pullPolicy: Always
   replicas: 1
   port: 8080
+  env:
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=60
+      -XX:InitialRAMPercentage=30
+      -XX:MaxGCPauseMillis=200
+      -XX:+ExitOnOutOfMemoryError
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
+      cpu: "500m"
+      memory: "1Gi"
     limits:
-      memory: "512Mi"
+      memory: "2Gi"
+  serviceAccount:
+    roleArn: ""
+  probes:
+    startupPath: /api/core/actuator/health
+    livenessPath: /api/core/actuator/health/liveness
+    readinessPath: /api/core/actuator/health/readiness
+  service:
+    annotations: {}
 
 apiPublicRead:
   enabled: true
@@ -27,12 +42,46 @@ apiPublicRead:
     pullPolicy: Always
   replicas: 1
   port: 8080
+  env:
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "15"
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "3000"
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=60
+      -XX:InitialRAMPercentage=30
+      -XX:MaxGCPauseMillis=200
+      -XX:+ExitOnOutOfMemoryError
+  hikari:
+    maximumPoolSize: "15"
+    minimumIdle: "5"
+    connectionTimeout: "3000"
+  warmup:
+    enabled: false
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
+      cpu: "750m"
+      memory: "1024Mi"
     limits:
-      memory: "512Mi"
+      cpu: "1500m"
+      memory: "1536Mi"
+  serviceAccount:
+    roleArn: ""
+  probes:
+    startupPath: /api/public/actuator/health
+    livenessPath: /api/public/actuator/health/liveness
+    readinessPath: /api/public/actuator/health/readiness
+  service:
+    annotations: {}
+  routing:
+    mode: service
+    backendService: api-public-read
+    weighted:
+      actionName: api-public-read-weighted
+      baseServiceName: api-public-read
+      surgeServiceName: api-public-read-surge
+      baseWeight: 100
+      surgeWeight: 0
 
 externalIngestion:
   enabled: true
@@ -49,6 +98,115 @@ externalIngestion:
       memory: "256Mi"
     limits:
       memory: "512Mi"
+  serviceAccount:
+    roleArn: ""
+
+preScalingController:
+  enabled: true
+  name: pre-scaling-controller
+  image:
+    repository: safespot/pre-scaling-controller
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  port: 8084
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      memory: "512Mi"
+  serviceAccount:
+    roleArn: ""
+  probes:
+    livenessPath: /actuator/health/liveness
+    readinessPath: /actuator/health/readiness
+  config:
+    enabled: "true"
+    targetHpaName: api-public-read-surge
+    pollingIntervalMs: "30000"
+    trigger:
+      minLevelRank: "3"
+      lookbackMinutes: "10"
+    surge:
+      normalMinReplicas: "1"
+      disasterMinReplicas: "3"
+      maxReplicas: "10"
+      cooldownSeconds: "1800"
+
+apiPublicReadSurge:
+  enabled: true
+  name: api-public-read-surge
+  replicas: 1
+  port: 8080
+  env:
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "15"
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "3000"
+    JAVA_TOOL_OPTIONS: >
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=60
+      -XX:InitialRAMPercentage=30
+      -XX:MaxGCPauseMillis=200
+      -XX:+ExitOnOutOfMemoryError
+  resources:
+    requests:
+      cpu: "750m"
+      memory: "1024Mi"
+    limits:
+      cpu: "1500m"
+      memory: "1536Mi"
+  hikari:
+    maximumPoolSize: "15"
+    minimumIdle: "5"
+    connectionTimeout: "3000"
+  service:
+    name: api-public-read-surge
+    annotations: {}
+
+scenarioSimulator:
+  enabled: false
+  name: scenario-simulator
+  image:
+    repository: safespot/scenario-simulator
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  serviceAccount:
+    create: false
+    name: api-core  # dev: api-core IRSA SA 재사용 (SQS SendMessage 권한 공유)
+    roleArn: ""
+  probes:
+    startupPath: /actuator/health
+    readinessPath: /actuator/health/readiness
+    livenessPath: /actuator/health/liveness
+
+readmodelRegenCronJobs:
+  enabled: true
+  serviceAccountName: api-public-read  # cache/readmodel refresh queue SendMessage 권한이 있는 기존 IRSA SA 재사용
+  image:
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-aws-cli
+    tag: "2"
+    pullPolicy: IfNotPresent
+  awsRegion: ap-northeast-2
+  ttlSecondsAfterFinished: 300
+  shelterStatic:
+    enabled: true
+    schedule: "0 * * * *"
+  shelterStatus:
+    enabled: true
+    schedule: "*/15 * * * *"
+  disaster:
+    enabled: true
+    schedule: "*/5 * * * *"
 
 nginx:
   enabled: true
@@ -69,6 +227,10 @@ nginx:
 configmap:
   springProfilesActive: dev
 
+  externalIngestion:
+    kmaWeatherCron: "0 10,25,40,55 * * * *"
+    airKoreaCron: "0 10,25,40,55 * * * *"
+
   redis:
     host: redis.safespot-cache.svc.cluster.local
     port: "6379"
@@ -79,8 +241,23 @@ configmap:
 
   sqs:
     coreEventQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-core-events
-    cacheRegenerationQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-regeneration
+
+    # cache domain별 queue URL (신규 다중 queue 계약)
+    # shelter/evacuation entry 관련 regeneration → cache-refresh queue
+    cacheRefreshQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-refresh
+    # disaster 관련 regeneration → readmodel-refresh queue
+    readModelRefreshQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-readmodel-refresh
+    # weather/air_quality 관련 regeneration → environment-cache-refresh queue
+    environmentCacheRefreshQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-environment-cache-refresh
+
+    # backward compatibility — 기존 application 버전 호환용. cacheRefreshQueueUrl과 동일값 유지.
+    # application이 다중 queue로 완전 전환되면 제거한다.
+    cacheRegenerationQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-cache-refresh
+
+    # deprecated — 신규 필드로 대체됨. 기존 사용처 정리 후 제거한다.
+    # disasterQueueUrl → readModelRefreshQueueUrl 으로 대체
     disasterQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-disaster-events
+    # environmentQueueUrl → environmentCacheRefreshQueueUrl 으로 대체
     environmentQueueUrl: http://localstack.safespot-localstack.svc.cluster.local:4566/000000000000/safespot-environment-events
 
   database:
@@ -89,40 +266,62 @@ configmap:
     writerHost: postgres-postgresql-primary.safespot-db.svc.cluster.local
     readerHost: postgres-postgresql-read.safespot-db.svc.cluster.local
 
+  apiCore:
+    contextPath: ""  # nginx rewrite 환경에서는 비워둠; ALB 환경은 values-dev에서 override
+  apiPublicRead:
+    contextPath: ""  # nginx rewrite 환경에서는 비워둠; ALB 환경은 values-dev에서 override
+
 secret:
   create: false
   existingName: safespot-secret
   dbUser: ""
   dbPassword: ""
-  awsAccessKeyId: ""
-  awsSecretAccessKey: ""
-  jwtSecret: ""
-  jwtExpiration: "1800"
+  jwtAccessTokenKey: ""
+  jwtRefreshTokenKey: ""
+  seoulApiKey: ""
+  moisApiKey: ""
+  dataGoKrApiKey: ""
   externalSecret:
     enabled: false
-    # TODO: platform addon(safespot-terraform)의 ClusterSecretStore 이름을 확인하고 다르면 수정
     secretStoreName: ssm-parameter-store
     refreshInterval: 1h
     remoteRefs:
       dbUser: ""
       dbPassword: ""
-      awsAccessKeyId: ""
-      awsSecretAccessKey: ""
-      jwtSecret: ""
-      jwtExpiration: ""
+      jwtAccessTokenKey: ""
+      jwtRefreshTokenKey: ""
+      seoulApiKey: ""
+      moisApiKey: ""
+      dataGoKrApiKey: ""
+      warmupSecret: ""
 
 ingress:
   enabled: true
   className: nginx
+  groupName: safespot-api
   host: safespot.local
   annotations: {}
+  alb:
+    # Extra ALB load-balancer-attributes passed as a list of "key=value" strings.
+    # Merged with accessLogs attributes when rendered. nginx ingress는 무시됨.
+    loadBalancerAttributes: []
+    accessLogs:
+      enabled: false   # EKS dev: values-dev.infra.generated.yaml에서 true로 override
+      bucket: ""       # S3 bucket name (dev: safespot-dev-ops-logs)
+      # prefix는 S3 bucket policy Resource 경로와 반드시 일치해야 한다.
+      # policy Resource: arn:aws:s3:::safespot-dev-ops-logs/alb/AWSLogs/154335823230/*
+      # annotation prefix 'alb' → S3 object path: alb/AWSLogs/<account-id>/...
+      prefix: "alb"
   apiCore:
     path: /api/core(/|$)(.*)
     pathType: ImplementationSpecific
+    healthcheckPath: /api/core/actuator/health
   apiPublicRead:
     path: /api/public(/|$)(.*)
     pathType: ImplementationSpecific
+    healthcheckPath: /api/public/actuator/health
   front:
+    enabled: true
     path: /
     pathType: Prefix
 
@@ -130,7 +329,7 @@ autoscaling:
   apiCore:
     enabled: true
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 8
     targetCPUUtilizationPercentage: 70
 
   apiPublicRead:
@@ -140,7 +339,57 @@ autoscaling:
     targetCPUUtilizationPercentage: 70
 
   externalIngestion:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 1
+    targetCPUUtilizationPercentage: 70
+
+  # api-public-read-surge HPA는 External metric 기반 scale-to-zero 구조를 의도한다.
+  # minReplicas=0은 HPAScaleToZero feature gate가 활성화된 클러스터에서만 사용 가능하다.
+  # 현재 EKS 클러스터에서 HPAScaleToZero가 미지원이므로 minReplicas=1로 운영한다.
+  # 재난 해소 시 pre-scaling controller가 Deployment를 직접 scale-to-0으로 관리한다.
+  # Prometheus Adapter external metric rule 구성은 safespot-ops repo 후속 작업이다.
+  apiPublicReadSurge:
     enabled: true
     minReplicas: 1
-    maxReplicas: 2
-    targetCPUUtilizationPercentage: 70
+    maxReplicas: 20
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "5"
+
+scheduling:
+  apiCore:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  apiPublicRead:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  externalIngestion:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  preScalingController:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  dbMigration:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  apiPublicReadSurge:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  readmodelRegenCronJobs:
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}

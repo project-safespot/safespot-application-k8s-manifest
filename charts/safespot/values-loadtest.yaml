@@ -1,0 +1,66 @@
+# 부하테스트 overlay values
+#
+# 용도: surge 6-replica 기준 성능 측정을 위한 overlay.
+#   - api-public-read-surge: 6 replicas 고정 (HPA 6/6)
+#   - api-public-read normal: 1 replica 고정 (HPA 1/1)
+#     → normal HPA scale-out이 테스트 결과를 오염시키지 않도록 고정.
+#       직전 테스트에서 normal HPA가 5 replicas까지 scale-out을 시도하면서
+#       3개가 Pending → 측정 불확도 증가.
+#   - pre-scaling-controller: disabled
+#     → disaster/cooldown 정책이 runtime에 HPA minReplicas를 되돌리지 않도록.
+#
+# 적용: ArgoCD Application values 목록에 이 파일을 임시 추가 후 sync.
+# 원복: ArgoCD Application values 목록에서 이 파일 제거 후 sync.
+# 주의: 운영 기본값(values.yaml)은 변경하지 않는다.
+
+# normal api-public-read: 1 replica 고정
+# warmup.enabled=true: disaster cache warmup endpoint 활성화 (부하테스트 전용)
+#   endpoint: POST /api/public/internal/test/cache-warmup/disasters
+#   인증: X-Warmup-Secret 헤더 (safespot-secret의 SAFESPOT_WARMUP_SECRET 참조)
+#   동작: DisasterReadModelWarmupRequested 이벤트를 READMODEL_REFRESH_QUEUE_URL 로 발행
+#
+# TODO(security): /api/public/internal/test/** 경로가 ALB를 통해 외부에 노출됨.
+#   X-Warmup-Secret 헤더 인증이 1차 방어선이나, 부하테스트 완료 후 반드시
+#   warmup.enabled=false 로 원복하여 endpoint를 비활성화한다.
+#   장기적으로는 ALB listener rule 또는 WAF rule로 /internal/test/** 차단 권장.
+#   (Terraform: safespot-ops repo의 ALB 리소스에서 조건부 listener rule 추가)
+apiPublicRead:
+  replicas: 1
+  warmup:
+    enabled: true
+  routing:
+    mode: weighted
+    weighted:
+      actionName: api-public-read-weighted
+      baseServiceName: api-public-read
+      surgeServiceName: api-public-read-surge
+      baseWeight: 0
+      surgeWeight: 100
+
+# api-public-read-surge: 6 replicas 고정
+apiPublicReadSurge:
+  replicas: 10
+
+autoscaling:
+  # normal api-public-read HPA: 1/1 고정 (CPU scale-out 차단)
+  apiPublicRead:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 1
+    targetCPUUtilizationPercentage: 70
+
+  # surge HPA: 6/6 고정 (ArgoCD drift 및 HPA scale 변수 제거)
+  apiPublicReadSurge:
+    enabled: true
+    minReplicas: 10
+    maxReplicas: 10
+    metric:
+      type: External
+      name: api_public_read_requests_per_second
+      targetAverageValue: "450"
+
+# 부하테스트 중 pre-scaling-controller를 비활성화한다.
+# pre-scaling-controller는 disaster 상태/cooldown 정책에 따라 HPA minReplicas를
+# 운영 기본값(normalMinReplicas=1)으로 되돌릴 수 있으므로, 테스트 기간 동안 꺼둔다.
+preScalingController:
+  enabled: false

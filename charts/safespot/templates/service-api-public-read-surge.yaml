@@ -1,25 +1,27 @@
-{{- if .Values.apiPublicRead.enabled }}
+{{- if and .Values.apiPublicRead.enabled .Values.apiPublicReadSurge.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.apiPublicRead.name }}
+  name: {{ .Values.apiPublicReadSurge.service.name }}
   namespace: {{ .Values.global.namespace }}
-  {{- with .Values.apiPublicRead.service.annotations }}
+  {{- with .Values.apiPublicReadSurge.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
-    app: {{ .Values.apiPublicRead.name }}
+    app: {{ .Values.apiPublicReadSurge.name }}
     service: {{ .Values.apiPublicRead.name }}
+    component: surge
     env: {{ .Values.global.env }}
 spec:
   selector:
-    app: {{ .Values.apiPublicRead.name }}
+    app: {{ .Values.apiPublicReadSurge.name }}
     service: {{ .Values.apiPublicRead.name }}
+    component: surge
   ports:
     - name: http
       port: 80
-      targetPort: {{ .Values.apiPublicRead.port }}
+      targetPort: {{ .Values.apiPublicReadSurge.port }}
       protocol: TCP
   type: ClusterIP
 {{- end }}

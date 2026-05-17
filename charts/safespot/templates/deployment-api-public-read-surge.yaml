@@ -1,42 +1,47 @@
-{{- if .Values.apiPublicRead.enabled }}
+{{- if and .Values.apiPublicRead.enabled .Values.apiPublicReadSurge.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.apiPublicRead.name }}
+  name: {{ .Values.apiPublicReadSurge.name }}
   namespace: {{ .Values.global.namespace }}
   labels:
-    app: {{ .Values.apiPublicRead.name }}
+    app: {{ .Values.apiPublicReadSurge.name }}
     service: {{ .Values.apiPublicRead.name }}
+    component: surge
     env: {{ .Values.global.env }}
 spec:
-  {{- if not .Values.autoscaling.apiPublicRead.enabled }}
-  replicas: {{ .Values.apiPublicRead.replicas }}
-  {{- end }}
+  # 운영 기본값: replicas=1 (values.yaml).
+  # 부하테스트: values-loadtest.yaml overlay로 replicas=6 override.
+  # kubectl patch/scale만으로 변경하면 ArgoCD selfHeal이 values.yaml 기본값으로 되돌린다.
+  replicas: {{ .Values.apiPublicReadSurge.replicas }}
   selector:
     matchLabels:
-      app: {{ .Values.apiPublicRead.name }}
+      app: {{ .Values.apiPublicReadSurge.name }}
+      service: {{ .Values.apiPublicRead.name }}
+      component: surge
   template:
     metadata:
       labels:
-        app: {{ .Values.apiPublicRead.name }}
+        app: {{ .Values.apiPublicReadSurge.name }}
         service: {{ .Values.apiPublicRead.name }}
+        component: surge
         env: {{ .Values.global.env }}
     spec:
       serviceAccountName: {{ .Values.apiPublicRead.name }}
-      {{- with .Values.scheduling.apiPublicRead.nodeSelector }}
+      {{- with .Values.scheduling.apiPublicReadSurge.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.scheduling.apiPublicRead.tolerations }}
+      {{- with .Values.scheduling.apiPublicReadSurge.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.scheduling.apiPublicRead.affinity }}
+      {{- with .Values.scheduling.apiPublicReadSurge.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .Values.apiPublicRead.name }}
+        - name: {{ .Values.apiPublicReadSurge.name }}
           image: "{{ .Values.apiPublicRead.image.repository }}:{{ .Values.apiPublicRead.image.tag }}"
           imagePullPolicy: {{ .Values.apiPublicRead.image.pullPolicy }}
           ports:
@@ -48,7 +53,7 @@ spec:
             - secretRef:
                 name: {{ .Values.secret.existingName }}
           resources:
-            {{- toYaml .Values.apiPublicRead.resources | nindent 12 }}
+            {{- toYaml .Values.apiPublicReadSurge.resources | nindent 12 }}
           startupProbe:
             httpGet:
               path: {{ .Values.apiPublicRead.probes.startupPath }}

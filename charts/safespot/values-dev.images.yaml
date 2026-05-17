@@ -1,0 +1,28 @@
+## Owned by the application image-update CI workflow.
+## Do not add infrastructure endpoints or secrets to this file.
+
+apiCore:
+  image:
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-api-core
+    tag: "50dd390-107-1"
+    pullPolicy: Always
+apiPublicRead:
+  image:
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-api-public-read
+    tag: "50dd390-107-1"
+    pullPolicy: Always
+externalIngestion:
+  image:
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-external-ingestion
+    tag: "50dd390-107-1"
+    pullPolicy: Always
+scenarioSimulator:
+  image:
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-scenario-simulator
+    tag: "50dd390-107-1"
+    pullPolicy: Always
+preScalingController:
+  image:
+    repository: 154335823230.dkr.ecr.ap-northeast-2.amazonaws.com/safespot-dev-ops-ecr-pre-scaling-controller
+    tag: "50dd390-107-1"
+    pullPolicy: Always

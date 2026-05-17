@@ -1,0 +1,57 @@
+{{- if .Values.ingress.enabled }}
+{{- $routing := .Values.apiPublicRead.routing | default dict }}
+{{- $routingMode := default "service" $routing.mode }}
+{{- $backendService := default .Values.apiPublicRead.name $routing.backendService }}
+{{- $weighted := $routing.weighted | default dict }}
+{{- $actionName := default (printf "%s-weighted" .Values.apiPublicRead.name) $weighted.actionName }}
+{{- $baseServiceName := default .Values.apiPublicRead.name $weighted.baseServiceName }}
+{{- $surgeServiceName := default .Values.apiPublicReadSurge.service.name $weighted.surgeServiceName }}
+{{- $baseWeight := 100 }}
+{{- if hasKey $weighted "baseWeight" }}
+{{- $baseWeight = int (index $weighted "baseWeight") }}
+{{- end }}
+{{- $surgeWeight := 0 }}
+{{- if hasKey $weighted "surgeWeight" }}
+{{- $surgeWeight = int (index $weighted "surgeWeight") }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: safespot-api-public-read-ingress
+  namespace: {{ .Values.global.namespace }}
+  annotations:
+    alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.groupName }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.apiPublicRead.healthcheckPath }}
+    {{- $lbAttrs := include "safespot.albLoadBalancerAttributes" . | trim }}
+    {{- if $lbAttrs }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: {{ $lbAttrs | quote }}
+    {{- end }}
+    {{- if eq $routingMode "weighted" }}
+    alb.ingress.kubernetes.io/actions.{{ $actionName }}: >
+      {{ dict "type" "forward" "forwardConfig" (dict "targetGroups" (list (dict "serviceName" $baseServiceName "servicePort" "80" "weight" $baseWeight) (dict "serviceName" $surgeServiceName "servicePort" "80" "weight" $surgeWeight))) | toJson }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.apiPublicRead.path }}
+            pathType: {{ .Values.ingress.apiPublicRead.pathType }}
+            backend:
+              service:
+                {{- if eq $routingMode "weighted" }}
+                name: {{ $actionName }}
+                {{- else }}
+                name: {{ $backendService }}
+                {{- end }}
+                port:
+                  {{- if eq $routingMode "weighted" }}
+                  name: use-annotation
+                  {{- else }}
+                  number: 80
+                  {{- end }}
+{{- end }}

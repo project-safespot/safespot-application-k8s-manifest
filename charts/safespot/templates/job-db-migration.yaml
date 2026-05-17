@@ -3,6 +3,10 @@ kind: Job
 metadata:
   name: db-migration
   namespace: {{ .Values.global.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   template:
     spec:
@@ -28,6 +32,18 @@ spec:
             - name: sql
               mountPath: /flyway/sql
       restartPolicy: Never
+      {{- with .Values.scheduling.dbMigration.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.dbMigration.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.dbMigration.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: sql
           configMap:

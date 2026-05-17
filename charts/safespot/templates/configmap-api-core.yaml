@@ -21,9 +21,13 @@ data:
   AWS_ENDPOINT_URL: {{ .Values.configmap.aws.endpoint | quote }}
   SQS_ENDPOINT: {{ .Values.configmap.aws.endpoint | quote }}
   {{- end }}
+  SPRING_FLYWAY_ENABLED: "false"
   SPRING_DATASOURCE_URL: {{ printf "jdbc:postgresql://%s:%s/%s" .Values.configmap.database.writerHost .Values.configmap.database.port .Values.configmap.database.name | quote }}
   SPRING_DATA_REDIS_HOST: {{ .Values.configmap.redis.host | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.configmap.redis.port | quote }}
   SAFESPOT_SQS_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
   SQS_CORE_EVENT_QUEUE_URL: {{ .Values.configmap.sqs.coreEventQueueUrl | quote }}
+  {{- if .Values.configmap.apiCore.contextPath }}
+  SERVER_SERVLET_CONTEXT_PATH: {{ .Values.configmap.apiCore.contextPath | quote }}
+  {{- end }}
 {{- end }}

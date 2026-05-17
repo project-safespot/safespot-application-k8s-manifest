@@ -9,7 +9,9 @@ metadata:
     service: {{ .Values.apiCore.name }}
     env: {{ .Values.global.env }}
 spec:
+  {{- if not .Values.autoscaling.apiCore.enabled }}
   replicas: {{ .Values.apiCore.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Values.apiCore.name }}
@@ -20,12 +22,26 @@ spec:
         service: {{ .Values.apiCore.name }}
         env: {{ .Values.global.env }}
     spec:
+      serviceAccountName: {{ .Values.apiCore.name }}
+      {{- with .Values.scheduling.apiCore.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.apiCore.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.apiCore.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.apiCore.name }}
           image: "{{ .Values.apiCore.image.repository }}:{{ .Values.apiCore.image.tag }}"
           imagePullPolicy: {{ .Values.apiCore.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.apiCore.port }}
+            - name: http
+              containerPort: {{ .Values.apiCore.port }}
           envFrom:
             - configMapRef:
                 name: safespot-api-core-config
@@ -33,16 +49,25 @@ spec:
                 name: {{ .Values.secret.existingName }}
           resources:
             {{- toYaml .Values.apiCore.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.apiCore.probes.startupPath }}
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /actuator/health
-              port: {{ .Values.apiCore.port }}
-            initialDelaySeconds: 10
+              path: {{ .Values.apiCore.probes.readinessPath }}
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             httpGet:
-              path: /actuator/health
-              port: {{ .Values.apiCore.port }}
-            initialDelaySeconds: 30
+              path: {{ .Values.apiCore.probes.livenessPath }}
+              port: http
+            timeoutSeconds: 5
             periodSeconds: 10
+            failureThreshold: 3
 {{- end }}

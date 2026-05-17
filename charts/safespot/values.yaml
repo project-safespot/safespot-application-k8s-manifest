@@ -43,6 +43,9 @@ apiPublicRead:
   replicas: 1
   port: 8080
   env:
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "15"
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "3000"
     JAVA_TOOL_OPTIONS: >
       -XX:+UseG1GC
       -XX:MaxRAMPercentage=60
@@ -50,15 +53,18 @@ apiPublicRead:
       -XX:MaxGCPauseMillis=200
       -XX:+ExitOnOutOfMemoryError
   hikari:
-    maximumPoolSize: "10"
+    maximumPoolSize: "15"
+    minimumIdle: "5"
+    connectionTimeout: "3000"
   warmup:
     enabled: false
   resources:
     requests:
-      cpu: "300m"
-      memory: "512Mi"
+      cpu: "750m"
+      memory: "1024Mi"
     limits:
-      memory: "1Gi"
+      cpu: "1500m"
+      memory: "1536Mi"
   serviceAccount:
     roleArn: ""
   probes:
@@ -134,6 +140,9 @@ apiPublicReadSurge:
   replicas: 1
   port: 8080
   env:
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "15"
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "3000"
     JAVA_TOOL_OPTIONS: >
       -XX:+UseG1GC
       -XX:MaxRAMPercentage=60
@@ -142,10 +151,15 @@ apiPublicReadSurge:
       -XX:+ExitOnOutOfMemoryError
   resources:
     requests:
-      cpu: "1500m"
-      memory: "2048Mi"
+      cpu: "750m"
+      memory: "1024Mi"
     limits:
-      memory: "3072Mi"
+      cpu: "1500m"
+      memory: "1536Mi"
+  hikari:
+    maximumPoolSize: "15"
+    minimumIdle: "5"
+    connectionTimeout: "3000"
   service:
     name: api-public-read-surge
     annotations: {}
